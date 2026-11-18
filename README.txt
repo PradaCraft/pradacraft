@@ -31,3 +31,6 @@ mengamankan panel admin dengan autentikasi, dan menghitung download di server.
 Jangan memakai password admin di JavaScript sisi browser.
 Tambahkan kebijakan privasi, syarat penggunaan, dan pastikan punya izin
 untuk membagikan addon yang diunggah. Ikuti lisensi pembuat addon.
+
+PradaCraft - Website deployment check.
+Minecraft Bedrock Addons Community.
