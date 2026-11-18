@@ -1,0 +1,55 @@
+PRADACRAFT — PANDUAN ONLINE GRATIS DARI HP
+
+TAHAP 1 — SIAPKAN FILE
+1. Download PradaCraft-Website.zip dari percakapan ChatGPT.
+2. Buka aplikasi pengelola file HP dan ekstrak ZIP.
+3. Pastikan folder PradaCraft berisi index.html, style.css, app.js, dan README.txt.
+4. Untuk uji coba, buka index.html di browser. Admin Panel versi demo menyimpan data hanya di browser itu.
+
+TAHAP 2 — TERBITKAN WEBSITE STATIS GRATIS DENGAN GITHUB PAGES
+Catatan: minta bantuan orang tua/wali untuk pembuatan akun dan pengaturan publikasi jika diperlukan.
+1. Buka https://github.com/ lalu masuk atau buat akun sesuai ketentuan layanan.
+2. Buat repository baru bernama pradacraft dan pilih Public.
+3. Di repository, tekan Add file > Upload files.
+4. Unggah ISI folder PradaCraft (index.html, style.css, app.js, README.txt), bukan ZIP-nya.
+5. Tekan Commit changes.
+6. Buka Settings > Pages.
+7. Pada Build and deployment, pilih Deploy from a branch.
+8. Pilih branch main dan folder /(root), lalu Save.
+9. Tunggu proses publikasi. Alamat situs biasanya https://USERNAME.github.io/pradacraft/
+   Ganti USERNAME dengan nama akun GitHub milikmu. Gunakan alamat yang ditampilkan GitHub Pages.
+
+TAHAP 3 — UJI
+1. Buka alamat Pages dari HP.
+2. Coba menu, pencarian, kategori, dan detail addon.
+3. Untuk uji upload, Admin Panel hanya menyimpan data di browser/perangkat yang dipakai.
+4. Jangan mengunggah addon yang bukan milikmu atau yang lisensinya tidak mengizinkan distribusi.
+
+BATASAN PENTING
+GitHub Pages hanya menyajikan file statis. Versi saat ini BUKAN backend publik:
+- Addon yang diupload dari Admin Panel tidak otomatis terlihat oleh pengunjung lain.
+- Hitungan download dan komentar tersimpan lokal, bukan global.
+- Tidak ada login admin aman.
+- File unggahan tersimpan sebagai data browser dan ada batas ruang penyimpanan.
+
+TAHAP 4 — FITUR PUBLIK SEBENARNYA
+Agar semua pengunjung melihat addon yang sama, dibutuhkan backend/database dan penyimpanan file, misalnya Supabase (database + storage) atau layanan backend sejenis.
+Implementasi harus menambahkan:
+- autentikasi admin sisi server (jangan menyimpan password di app.js),
+- tabel addons, downloads, ratings, comments,
+- storage untuk file dan gambar,
+- aturan akses database/storage,
+- validasi tipe dan ukuran file, serta moderasi komentar.
+Jangan pernah menaruh service-role key atau password rahasia di HTML/JavaScript publik.
+Periksa batas gratis dan ketentuan usia masing-masing layanan sebelum mendaftar; minta bantuan orang tua/wali bila diperlukan.
+
+KALIMAT HERO YANG BISA DIPAKAI
+WELCOME TO PRADACRAFT
+Discover More. Create More. Play Beyond.
+Temukan addon, texture pack, map, dan konten Minecraft Bedrock pilihan untuk menghadirkan pengalaman bermain yang lebih seru. Jelajahi karya komunitas, temukan inspirasi baru, dan bangun petualanganmu sendiri.
+
+ABOUT
+PradaCraft is a community-driven hub for Minecraft Bedrock content. Discover addons, texture packs, maps, and creative resources made to inspire your next adventure.
+
+DISCLAIMER
+PradaCraft is an independent fan-made project and is not affiliated with, endorsed by, or associated with Mojang or Microsoft. Minecraft is a trademark of its respective owner.

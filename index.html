@@ -1,0 +1,51 @@
+<!doctype html>
+<html lang="id">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="theme-color" content="#101510"><title>PradaCraft — Minecraft Bedrock Addons</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<header class="topbar">
+  <a class="brand" href="#"><span class="brand-mark">P</span><span>PRADA<span class="green">CRAFT</span><small>BEDROCK ADDON HUB</small></span></a>
+  <button class="menu-btn" id="menuBtn" aria-label="Buka menu">☰</button>
+  <nav id="nav"><a href="#home">Home</a><a href="#catalog">Addons</a><a href="#popular">Popular</a><a href="#about">About</a></nav>
+  <button class="admin-open" id="adminOpen">Admin Panel ↗</button>
+</header>
+<main>
+<section class="hero" id="home">
+ <div class="hero-copy"><div class="eyebrow"><i></i> THE BEDROCK ADDON COLLECTION</div>
+ <h1>Upgrade your<br><span>Minecraft world.</span></h1>
+ <p>Temukan addon, texture, map, dan pengalaman baru untuk Minecraft Bedrock. Pilih, lihat detail, lalu download.</p>
+ <div class="hero-actions"><a class="btn primary" href="#catalog">Jelajahi Addons <b>→</b></a><button class="btn ghost" id="heroAdmin">Upload Addon +</button></div>
+ <div class="hero-stats"><div><b id="totalAddons">0</b><small>ADDONS</small></div><div><b id="totalDownloads">0</b><small>TOTAL DOWNLOADS</small></div><div><b>BEDROCK</b><small>EDITION</small></div></div>
+ </div>
+ <div class="hero-art"><div class="glow"></div><div class="pixel-cube"><div class="cube-top"></div><div class="cube-front"></div><div class="cube-side"></div></div><div class="float-tag tag-one">✦ COMMUNITY PICKS</div><div class="float-tag tag-two">MCPE / BEDROCK</div><div class="hero-orbit"></div></div>
+</section>
+<section class="ticker"><span>✦ PRADACRAFT</span><span>BEDROCK ADDONS</span><span>✦ DISCOVER • DOWNLOAD • PLAY</span><span>MADE FOR CRAFTERS</span></section>
+<section class="section" id="catalog">
+ <div class="section-head"><div><div class="eyebrow">EXPLORE COLLECTION</div><h2>Discover <span class="green">Addons</span></h2><p class="muted">Cari konten baru untuk petualanganmu.</p></div><div class="search-wrap"><span>⌕</span><input id="search" placeholder="Cari addon..." autocomplete="off"></div></div>
+ <div class="filters" id="filters"><button class="filter active" data-cat="All">All</button><button class="filter" data-cat="Addon">Addons</button><button class="filter" data-cat="Texture">Textures</button><button class="filter" data-cat="Map">Maps</button><button class="filter" data-cat="Shader">Shaders</button><button class="filter" data-cat="Other">Other</button></div>
+ <div class="catalog-grid" id="catalogGrid"></div>
+ <div class="empty hidden" id="empty">Belum ada addon yang cocok. Coba kata kunci lain atau upload addon pertama!</div>
+</section>
+<section class="section popular-section" id="popular"><div class="section-head"><div><div class="eyebrow">COMMUNITY FAVORITES</div><h2>Most <span class="green">Downloaded</span></h2><p class="muted">Addon yang paling sering diunduh.</p></div></div><div class="popular-grid" id="popularGrid"></div></section>
+<section class="cta" id="about"><div class="cta-icon">⬡</div><div><div class="eyebrow">BUILD YOUR NEXT WORLD</div><h2>Your next adventure starts here.</h2><p>PradaCraft adalah katalog komunitas untuk addon Minecraft Bedrock.</p></div><a class="btn primary" href="#catalog">Explore now →</a></section>
+</main>
+<footer><a class="brand" href="#"><span class="brand-mark">P</span><span>PRADA<span class="green">CRAFT</span><small>BEDROCK ADDON HUB</small></span></a><p>Fan-made community project. Not affiliated with Mojang or Microsoft.</p><span>© <span id="year"></span> PradaCraft</span></footer>
+
+<div class="modal hidden" id="detailModal"><div class="modal-backdrop" data-close="detail"></div><article class="dialog detail-dialog"><button class="close" data-close="detail">×</button><div id="detailContent"></div></article></div>
+<div class="modal hidden" id="adminModal"><div class="modal-backdrop" data-close="admin"></div><article class="dialog admin-dialog"><button class="close" data-close="admin">×</button><div class="eyebrow">CREATOR DASHBOARD</div><h2>Admin <span class="green">Panel</span></h2><p class="muted">Kelola addon yang tampil di website ini.</p>
+<form id="addonForm">
+ <label>Nama addon<input name="name" required maxlength="60" placeholder="Contoh: Fantasy Furniture"></label>
+ <div class="form-row"><label>Kategori<select name="category"><option>Addon</option><option>Texture</option><option>Map</option><option>Shader</option><option>Other</option></select></label><label>Versi Minecraft<input name="version" placeholder="1.21+" value="1.21+"></label></div>
+ <label>Deskripsi<textarea name="description" required rows="3" placeholder="Jelaskan isi addon..."></textarea></label>
+ <label>Gambar cover<input name="image" type="file" accept="image/*"></label>
+ <label>File addon (.mcaddon / .mcpack / .zip)<input name="file" type="file" accept=".mcaddon,.mcpack,.zip,.mcworld,.mctemplate" required></label>
+ <button class="btn primary full" type="submit">Publish Addon ↗</button>
+</form><div class="admin-note">Catatan: versi demo ini menyimpan data di browser/perangkat ini. Untuk website publik multi-pengguna, perlu hosting dan database/backend.</div>
+<div class="admin-list"><h3>Addon milikmu</h3><div id="adminList"></div></div>
+</article></div>
+<div class="toast" id="toast"></div>
+<script src="app.js"></script>
+</body></html>
