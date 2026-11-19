@@ -10,6 +10,7 @@ let addons = [];
 let activeCategory = 'All';
 let selectedRating = 5;
 let currentUser = null;
+let logoutButton = null;
 
 const $ = s => document.querySelector(s);
 
@@ -22,6 +23,7 @@ function esc(s = '') {
 
 function toast(msg) {
   const t = $('#toast');
+  if (!t) return;
   t.textContent = msg;
   t.classList.add('show');
   setTimeout(() => t.classList.remove('show'), 2400);
@@ -31,9 +33,31 @@ function isOwner() {
   return currentUser?.id === OWNER_UID;
 }
 
+// Hanya Owner yang bisa melihat tombol pengelola.
+function updateOwnerControls() {
+  const visible = isOwner();
+
+  ['#adminOpen', '#heroAdmin'].forEach(selector => {
+    const el = $(selector);
+    if (el) el.style.display = visible ? '' : 'none';
+  });
+
+  if (logoutButton) {
+    logoutButton.style.display = visible ? '' : 'none';
+  }
+
+  if (!visible) {
+    $('#adminModal')?.classList.add('hidden');
+  }
+}
+
 async function refreshUser() {
-  const { data } = await db.auth.getSession();
-  currentUser = data.session?.user || null;
+  const { data, error } = await db.auth.getSession();
+
+  if (error) console.error(error);
+
+  currentUser = data?.session?.user || null;
+  updateOwnerControls();
   return currentUser;
 }
 
@@ -52,20 +76,18 @@ async function showAdmin() {
   await refreshUser();
 
   if (!currentUser) {
-    toast('Silakan login dengan GitHub terlebih dahulu.');
+    toast('Silakan login sebagai Owner.');
     await loginGitHub();
     return;
   }
 
   if (!isOwner()) {
-    await db.auth.signOut();
-    currentUser = null;
     toast('Akun ini bukan pemilik PradaCraft.');
     return;
   }
 
   $('#adminModal').classList.remove('hidden');
-  renderAdmin();
+  await renderAdmin();
 }
 
 function imageUrl(path) {
@@ -157,7 +179,6 @@ async function openDetail(id) {
     : Number(a.rating || 0);
 
   const image = imageUrl(a.image_path);
-  const fileUrl = imageUrl(a.file_path);
 
   $('#detailContent').innerHTML = `
     ${image
@@ -211,7 +232,6 @@ async function openDetail(id) {
   `;
 
   $('#detailModal').classList.remove('hidden');
-
   $('#downloadNow').onclick = () => downloadAddon(a);
 
   document.querySelectorAll('[data-star]').forEach(b => {
@@ -228,6 +248,7 @@ async function openDetail(id) {
 
 async function downloadAddon(a) {
   const url = imageUrl(a.file_path);
+
   if (!url) {
     toast('File addon tidak ditemukan.');
     return;
@@ -392,6 +413,7 @@ $('#addonForm').addEventListener('submit', async e => {
   }
 
   const allowed = /\.(mcaddon|mcpack|mcworld|mctemplate|zip)$/i;
+
   if (!allowed.test(file.name)) {
     toast('Format file addon tidak didukung.');
     return;
@@ -433,31 +455,53 @@ $('#addonForm').addEventListener('submit', async e => {
   }
 });
 
-db.auth.onAuthStateChange(async (event, session) => {
+// Tombol logout hanya dibuat untuk Owner.
+logoutButton = document.createElement('button');
+logoutButton.className = 'btn ghost full';
+logoutButton.textContent = 'Logout GitHub';
+logoutButton.style.display = 'none';
+logoutButton.onclick = async () => {
+  await db.auth.signOut();
+  currentUser = null;
+  updateOwnerControls();
+  toast('Berhasil logout.');
+};
+
+$('#addonForm').before(logoutButton);
+
+// Perubahan status login.
+db.auth.onAuthStateChange((event, session) => {
   currentUser = session?.user || null;
+  updateOwnerControls();
 
   if (event === 'SIGNED_IN' && currentUser && !isOwner()) {
-    await db.auth.signOut();
     currentUser = null;
-    toast('Akun ini tidak memiliki akses Admin PradaCraft.');
+    updateOwnerControls();
+
+    db.auth.signOut().then(() => {
+      toast('Akun ini tidak memiliki akses Admin PradaCraft.');
+    });
+    return;
+  }
+
+  if (event === 'SIGNED_IN' && isOwner()) {
+    $('#adminModal').classList.remove('hidden');
+    renderAdmin();
   }
 });
 
 async function start() {
+  updateOwnerControls();
+
   await refreshUser();
   await loadAddons();
 
-  const logout = document.createElement('button');
-  logout.className = 'btn ghost full';
-  logout.textContent = 'Logout GitHub';
-  logout.onclick = async () => {
-    await db.auth.signOut();
-    currentUser = null;
-    $('#adminModal').classList.add('hidden');
-    toast('Berhasil logout.');
-  };
+  // Login khusus Owner jika belum memiliki sesi.
+  const params = new URLSearchParams(window.location.search);
 
-  $('#addonForm').before(logout);
+  if (params.get('admin') === 'login' && !isOwner()) {
+    await loginGitHub();
+  }
 }
 
 start();
