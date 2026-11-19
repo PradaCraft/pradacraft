@@ -33,7 +33,111 @@ function isOwner() {
   return currentUser?.id === OWNER_UID;
 }
 
-// Hanya Owner yang bisa melihat tombol pengelola.
+// ======================================
+// SISTEM TERJEMAHAN PRADACRAFT
+// ======================================
+
+const translationCache = new Map();
+
+const translationLanguages = {
+  id: '🇮🇩 Indonesia',
+  en: '🇬🇧 English',
+  ja: '🇯🇵 Japanese',
+  es: '🇪🇸 Spanish',
+  pt: '🇧🇷 Portuguese',
+  fr: '🇫🇷 French',
+  de: '🇩🇪 German',
+  ko: '🇰🇷 Korean',
+  'zh-CN': '🇨🇳 Chinese',
+  ar: '🇸🇦 Arabic',
+  ru: '🇷🇺 Russian'
+};
+
+function splitTranslationText(text, maxLength = 450) {
+  const words = text.match(/\S+\s*/g) || [];
+  const chunks = [];
+  let current = '';
+
+  for (const word of words) {
+    if (current.length + word.length > maxLength && current) {
+      chunks.push(current);
+      current = '';
+    }
+    current += word;
+  }
+
+  if (current) chunks.push(current);
+  return chunks;
+}
+
+async function translateText(text, target) {
+  const key = `${target}:${text}`;
+
+  if (translationCache.has(key)) {
+    return translationCache.get(key);
+  }
+
+  const chunks = splitTranslationText(text);
+  const results = [];
+
+  for (const chunk of chunks) {
+    const url =
+      'https://api.mymemory.translated.net/get?q=' +
+      encodeURIComponent(chunk) +
+      '&langpair=autodetect%7C' +
+      encodeURIComponent(target);
+
+    const response = await fetch(url);
+
+    if (!response.ok) {
+      throw new Error('Layanan terjemahan sedang bermasalah.');
+    }
+
+    const data = await response.json();
+
+    if (
+      data.responseStatus !== 200 ||
+      !data.responseData?.translatedText
+    ) {
+      throw new Error('Teks gagal diterjemahkan.');
+    }
+
+    results.push(data.responseData.translatedText);
+  }
+
+  const result = results.join('');
+  translationCache.set(key, result);
+
+  return result;
+}
+
+function resetTranslations() {
+  const content = $('#detailContent');
+  if (!content) return;
+
+  content.querySelectorAll('[data-translation-id]').forEach(el => {
+    el.textContent = el.dataset.original;
+  });
+
+  content.querySelectorAll('[data-translate]').forEach(btn => {
+    btn.dataset.translated = 'false';
+    btn.textContent = '🌐 Translate';
+  });
+}
+
+function updateTranslationControls() {
+  const content = $('#detailContent');
+  if (!content) return;
+
+  content.querySelectorAll('[data-translate]').forEach(btn => {
+    btn.disabled = false;
+  });
+}
+
+// ======================================
+// OWNER ACCESS
+// ======================================
+
 function updateOwnerControls() {
   const visible = isOwner();
 
@@ -58,6 +162,7 @@ async function refreshUser() {
 
   currentUser = data?.session?.user || null;
   updateOwnerControls();
+
   return currentUser;
 }
 
@@ -90,8 +195,13 @@ async function showAdmin() {
   await renderAdmin();
 }
 
+// ======================================
+// ADDON DATABASE
+// ======================================
+
 function imageUrl(path) {
   if (!path) return '';
+
   return db.storage.from(BUCKET).getPublicUrl(path).data.publicUrl;
 }
 
@@ -115,22 +225,29 @@ function card(a) {
   const image = imageUrl(a.image_path);
 
   return `
-    <article class="addon-card" data-id="${a.id}">
+    <article class="addon-card" data-id="${esc(a.id)}">
       <div class="cover">
         ${image
           ? `<img src="${esc(image)}" alt="${esc(a.name)}">`
           : '<div class="cover-placeholder">⬡</div>'}
         <span class="category-pill">${esc(a.category)}</span>
       </div>
+
       <div class="card-body">
         <div class="card-title-row">
           <h3>${esc(a.name)}</h3>
           <span class="version">${esc(a.version || 'Bedrock')}</span>
         </div>
+
         <p class="card-desc">${esc(a.description || '')}</p>
+
         <div class="card-foot">
-          <span class="rating">★ ${Number(a.rating || 0).toFixed(1)}</span>
-          <span>↓ ${Number(a.downloads || 0).toLocaleString('id-ID')} downloads</span>
+          <span class="rating">
+            ★ ${Number(a.rating || 0).toFixed(1)}
+          </span>
+          <span>
+            ↓ ${Number(a.downloads || 0).toLocaleString('id-ID')} downloads
+          </span>
         </div>
       </div>
     </article>`;
@@ -154,12 +271,17 @@ function render() {
     .join('');
 
   $('#totalAddons').textContent = addons.length;
+
   $('#totalDownloads').textContent = addons
     .reduce((sum, a) => sum + Number(a.downloads || 0), 0)
     .toLocaleString('id-ID');
 
   $('#year').textContent = new Date().getFullYear();
 }
+
+// ======================================
+// DETAIL ADDON + TRANSLATE
+// ======================================
 
 async function openDetail(id) {
   const a = addons.find(x => x.id === id);
@@ -174,6 +296,7 @@ async function openDetail(id) {
     .order('created_at', { ascending: false });
 
   const comments = reviews || [];
+
   const avg = comments.length
     ? comments.reduce((s, r) => s + r.rating, 0) / comments.length
     : Number(a.rating || 0);
@@ -193,11 +316,34 @@ async function openDetail(id) {
 
     <div class="detail-meta">
       <span>◈ ${esc(a.version || 'Bedrock')}</span>
-      <span class="rating">★ ${avg.toFixed(1)} (${comments.length} ratings)</span>
+      <span class="rating">
+        ★ ${avg.toFixed(1)} (${comments.length} ratings)
+      </span>
       <span>↓ ${Number(a.downloads || 0)} downloads</span>
     </div>
 
-    <p class="detail-description">${esc(a.description || '')}</p>
+    <div class="translation-controls">
+      <span>🌐 Bahasa</span>
+      <select id="translationLanguage">
+        ${Object.entries(translationLanguages).map(([code, name]) =>
+          `<option value="${esc(code)}" ${code === 'id' ? 'selected' : ''}>
+            ${esc(name)}
+          </option>`
+        ).join('')}
+      </select>
+    </div>
+
+    <div class="description-translation">
+      <p class="detail-description"
+        data-translation-id="description"
+        data-original="${esc(a.description || '')}">
+        ${esc(a.description || '')}
+      </p>
+
+      <button class="translate-btn" data-translate="description">
+        🌐 Translate
+      </button>
+    </div>
 
     <button class="btn primary download-btn" id="downloadNow">
       ↓ Download Addon
@@ -205,9 +351,11 @@ async function openDetail(id) {
 
     <div class="review-box">
       <h3>Rate this addon</h3>
+
       <div class="stars">
         ${[1,2,3,4,5].map(n =>
-          `<button class="star ${n <= selectedRating ? 'selected' : ''}" data-star="${n}">★</button>`
+          `<button class="star ${n <= selectedRating ? 'selected' : ''}"
+            data-star="${n}">★</button>`
         ).join('')}
       </div>
 
@@ -221,10 +369,17 @@ async function openDetail(id) {
       <h3 style="margin-top:20px">Komentar pengunjung</h3>
 
       <div id="comments">
-        ${comments.map(c => `
+        ${comments.map((c, i) => `
           <div class="comment">
             <b>${esc(c.name)}</b> · ${'★'.repeat(c.rating)}
-            <p>${esc(c.comment)}</p>
+
+            <p data-translation-id="comment-${i}"
+              data-original="${esc(c.comment)}">${esc(c.comment)}</p>
+
+            <button class="translate-btn"
+              data-translate="comment-${i}">
+              🌐 Translate
+            </button>
           </div>
         `).join('') || '<p class="muted">Belum ada komentar.</p>'}
       </div>
@@ -232,19 +387,82 @@ async function openDetail(id) {
   `;
 
   $('#detailModal').classList.remove('hidden');
+
   $('#downloadNow').onclick = () => downloadAddon(a);
+
+  // Klik tombol Translate.
+  $('#detailContent').onclick = async e => {
+    const btn = e.target.closest('[data-translate]');
+    if (!btn) return;
+
+    const translationId = btn.dataset.translate;
+
+    const element = $('#detailContent').querySelector(
+      `[data-translation-id="${translationId}"]`
+    );
+
+    if (!element) return;
+
+    // Kembalikan teks asli.
+    if (btn.dataset.translated === 'true') {
+      element.textContent = element.dataset.original;
+      btn.dataset.translated = 'false';
+      btn.textContent = '🌐 Translate';
+      return;
+    }
+
+    const original = element.dataset.original;
+    const language = $('#translationLanguage').value;
+
+    if (!original.trim()) {
+      toast('Tidak ada teks untuk diterjemahkan.');
+      return;
+    }
+
+    btn.disabled = true;
+    btn.textContent = 'Menerjemahkan...';
+
+    try {
+      const translated = await translateText(original, language);
+
+      element.textContent = translated;
+      btn.dataset.translated = 'true';
+      btn.textContent = '↩ Tampilkan Asli';
+
+    } catch (error) {
+      console.error(error);
+      toast(error.message || 'Terjemahan gagal.');
+      btn.textContent = '🌐 Translate';
+
+    } finally {
+      btn.disabled = false;
+    }
+  };
+
+  // Mengganti bahasa akan mengembalikan teks ke versi asli.
+  $('#translationLanguage').onchange = () => {
+    resetTranslations();
+  };
 
   document.querySelectorAll('[data-star]').forEach(b => {
     b.onclick = () => {
       selectedRating = Number(b.dataset.star);
+
       document.querySelectorAll('[data-star]').forEach(x =>
-        x.classList.toggle('selected', Number(x.dataset.star) <= selectedRating)
+        x.classList.toggle(
+          'selected',
+          Number(x.dataset.star) <= selectedRating
+        )
       );
     };
   });
 
   $('#sendReview').onclick = () => submitReview(a.id);
 }
+
+// ======================================
+// DOWNLOAD ADDON
+// ======================================
 
 async function downloadAddon(a) {
   const url = imageUrl(a.file_path);
@@ -268,14 +486,20 @@ async function downloadAddon(a) {
   link.href = url;
   link.download = a.file_name || 'addon.mcaddon';
   link.target = '_blank';
+
   document.body.appendChild(link);
   link.click();
   link.remove();
 
   toast('Download dimulai!');
+
   await loadAddons();
   await openDetail(a.id);
 }
+
+// ======================================
+// RATING DAN KOMENTAR
+// ======================================
 
 async function submitReview(id) {
   const comment = $('#commentText').value.trim();
@@ -299,8 +523,13 @@ async function submitReview(id) {
   }
 
   toast('Terima kasih atas ulasanmu!');
+
   await openDetail(id);
 }
+
+// ======================================
+// UPLOAD ADDON
+// ======================================
 
 function safeFileName(name) {
   return name.replace(/[^a-zA-Z0-9._-]/g, '_');
@@ -312,8 +541,13 @@ async function uploadFile(file, path) {
     .upload(path, file, { upsert: false });
 
   if (error) throw error;
+
   return path;
 }
+
+// ======================================
+// ADMIN PANEL
+// ======================================
 
 async function renderAdmin() {
   if (!isOwner()) return;
@@ -330,8 +564,14 @@ async function renderAdmin() {
 
   $('#adminList').innerHTML = (data || []).map(a => `
     <div class="admin-item">
-      <span>${esc(a.name)} <span class="muted">(${esc(a.category)})</span></span>
-      <button class="delete-btn" data-delete="${a.id}">Hapus</button>
+      <span>
+        ${esc(a.name)}
+        <span class="muted">(${esc(a.category)})</span>
+      </span>
+
+      <button class="delete-btn" data-delete="${esc(a.id)}">
+        Hapus
+      </button>
     </div>
   `).join('') || '<p class="muted">Belum ada addon.</p>';
 }
@@ -340,11 +580,15 @@ async function deleteAddon(id) {
   if (!isOwner()) return;
 
   const a = addons.find(x => x.id === id);
+
   if (!a || !confirm('Hapus addon ini dari katalog?')) return;
 
   const paths = [a.image_path, a.file_path].filter(Boolean);
 
-  const { error } = await db.from('addons').delete().eq('id', id);
+  const { error } = await db
+    .from('addons')
+    .delete()
+    .eq('id', id);
 
   if (error) {
     console.error(error);
@@ -353,44 +597,69 @@ async function deleteAddon(id) {
   }
 
   if (paths.length) {
-    const { error: storageError } = await db.storage.from(BUCKET).remove(paths);
+    const { error: storageError } = await db
+      .storage
+      .from(BUCKET)
+      .remove(paths);
+
     if (storageError) console.error(storageError);
   }
 
   toast('Addon berhasil dihapus.');
+
   await loadAddons();
   await renderAdmin();
 }
+
+// ======================================
+// SEARCH DAN FILTER
+// ======================================
 
 $('#search').addEventListener('input', render);
 
 document.querySelectorAll('.filter').forEach(b => {
   b.onclick = () => {
     activeCategory = b.dataset.cat;
+
     document.querySelectorAll('.filter').forEach(x =>
       x.classList.toggle('active', x === b)
     );
+
     render();
   };
 });
 
 $('#adminOpen').onclick = showAdmin;
 $('#heroAdmin').onclick = showAdmin;
-$('#menuBtn').onclick = () => $('#nav').classList.toggle('open');
+
+$('#menuBtn').onclick = () => {
+  $('#nav').classList.toggle('open');
+};
+
+// ======================================
+// EVENT WEBSITE
+// ======================================
 
 document.addEventListener('click', e => {
   const c = e.target.closest('[data-id]');
+
   if (c) openDetail(c.dataset.id);
 
   const close = e.target.dataset.close;
+
   if (close) {
     $('#' + (close === 'detail' ? 'detailModal' : 'adminModal'))
       .classList.add('hidden');
   }
 
   const del = e.target.dataset.delete;
+
   if (del) deleteAddon(del);
 });
+
+// ======================================
+// FORM UPLOAD
+// ======================================
 
 $('#addonForm').addEventListener('submit', async e => {
   e.preventDefault();
@@ -421,6 +690,7 @@ $('#addonForm').addEventListener('submit', async e => {
 
   const base = `${currentUser.id}/${Date.now()}`;
   const filePath = `${base}-${safeFileName(file.name)}`;
+
   let imagePath = null;
 
   try {
@@ -445,7 +715,9 @@ $('#addonForm').addEventListener('submit', async e => {
     if (error) throw error;
 
     f.reset();
+
     toast('Addon berhasil dipublikasikan!');
+
     await loadAddons();
     await renderAdmin();
 
@@ -455,23 +727,33 @@ $('#addonForm').addEventListener('submit', async e => {
   }
 });
 
-// Tombol logout hanya dibuat untuk Owner.
+// ======================================
+// LOGOUT OWNER
+// ======================================
+
 logoutButton = document.createElement('button');
 logoutButton.className = 'btn ghost full';
 logoutButton.textContent = 'Logout GitHub';
 logoutButton.style.display = 'none';
+
 logoutButton.onclick = async () => {
   await db.auth.signOut();
+
   currentUser = null;
   updateOwnerControls();
+
   toast('Berhasil logout.');
 };
 
 $('#addonForm').before(logoutButton);
 
-// Perubahan status login.
+// ======================================
+// STATUS LOGIN
+// ======================================
+
 db.auth.onAuthStateChange((event, session) => {
   currentUser = session?.user || null;
+
   updateOwnerControls();
 
   if (event === 'SIGNED_IN' && currentUser && !isOwner()) {
@@ -481,6 +763,7 @@ db.auth.onAuthStateChange((event, session) => {
     db.auth.signOut().then(() => {
       toast('Akun ini tidak memiliki akses Admin PradaCraft.');
     });
+
     return;
   }
 
@@ -490,13 +773,16 @@ db.auth.onAuthStateChange((event, session) => {
   }
 });
 
+// ======================================
+// MULAI WEBSITE
+// ======================================
+
 async function start() {
   updateOwnerControls();
 
   await refreshUser();
   await loadAddons();
 
-  // Login khusus Owner jika belum memiliki sesi.
   const params = new URLSearchParams(window.location.search);
 
   if (params.get('admin') === 'login' && !isOwner()) {
