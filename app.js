@@ -475,13 +475,14 @@ async function downloadAddon(a) {
 
     const { data } = db.storage
       .from(BUCKET)
-      .getPublicUrl(a.file_path, {
-        download: fileName
-      });
+      .getPublicUrl(a.file_path);
 
     if (!data?.publicUrl) {
       throw new Error('Link download tidak tersedia.');
     }
+
+    const downloadUrl = new URL(data.publicUrl);
+    downloadUrl.searchParams.set('download', fileName);
 
     toast('Menyiapkan download...');
 
@@ -491,11 +492,9 @@ async function downloadAddon(a) {
 
     if (error) console.error(error);
 
-    window.location.href = data.publicUrl;
+    window.location.href = downloadUrl.toString();
 
-    setTimeout(() => {
-      loadAddons();
-    }, 2000);
+    setTimeout(loadAddons, 2000);
 
   } catch (error) {
     console.error(error);
