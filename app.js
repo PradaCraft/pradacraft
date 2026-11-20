@@ -141,6 +141,9 @@ function updateTranslationControls() {
 function updateOwnerControls() {
   const visible = isOwner();
 
+  document.body.classList.toggle('is-owner', visible);
+  document.body.classList.toggle('is-visitor', !visible);
+
   ['#adminOpen', '#heroAdmin'].forEach(selector => {
     const el = $(selector);
     if (el) el.style.display = visible ? '' : 'none';
