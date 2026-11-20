@@ -975,3 +975,30 @@ async function start() {
 }
 
 start();
+
+// ADMIN PANEL EVENTS
+
+document.addEventListener('click', e => {
+  const adminAction = e.target.closest('[data-admin-action]');
+
+  if (adminAction) {
+    const id = adminAction.dataset.addonId;
+    const action = adminAction.dataset.adminAction;
+
+    if (action === 'edit') {
+      editAdminAddon(id);
+    } else if (action === 'photo') {
+      replaceAdminImage(id);
+    } else if (action === 'remove-photo') {
+      removeAdminImage(id);
+    }
+  }
+
+  const reviewDelete = e.target.closest('[data-delete-review]');
+
+  if (reviewDelete) {
+    deleteAdminReview(reviewDelete.dataset.deleteReview);
+  }
+});
+
+$('#adminSearch')?.addEventListener('input', renderAdmin);
