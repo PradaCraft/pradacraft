@@ -509,3 +509,129 @@ textarea:focus, .admin-dialog input:focus, .admin-dialog select:focus { border-c
     }
   }
 }
+
+/* PRADACRAFT ADMIN DASHBOARD */
+.admin-dialog {
+  width: min(850px, 100%);
+}
+
+.admin-stats {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 12px;
+}
+
+.admin-stat {
+  padding: 17px;
+  border: 1px solid #344b35;
+  border-radius: 13px;
+  background: linear-gradient(145deg, #1b2a1c, #101711);
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.admin-stat b {
+  color: var(--green);
+  font-size: 25px;
+}
+
+.admin-stat span,
+.admin-addon-info small,
+.admin-review small {
+  color: var(--muted);
+  font-size: 11px;
+}
+
+#adminSearch {
+  margin-bottom: 15px;
+}
+
+.admin-addon-item {
+  align-items: flex-start;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.admin-thumb {
+  width: 65px;
+  height: 65px;
+  flex-shrink: 0;
+  object-fit: cover;
+  border-radius: 10px;
+  background: #1c2a1d;
+}
+
+.admin-no-image {
+  display: grid;
+  place-items: center;
+  color: var(--green);
+  font-size: 28px;
+}
+
+.admin-addon-info {
+  flex: 1;
+  min-width: 120px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.admin-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 7px;
+}
+
+.admin-actions button {
+  padding: 7px 10px;
+  border: 1px solid #405b40;
+  border-radius: 8px;
+  background: #17251a;
+  color: #d9f4d1;
+  cursor: pointer;
+  font-size: 11px;
+}
+
+.admin-actions button:hover {
+  border-color: var(--green);
+}
+
+.admin-review {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 14px 0;
+  border-bottom: 1px solid #29372b;
+}
+
+.admin-review p {
+  margin: 7px 0;
+  overflow-wrap: anywhere;
+  color: #c4d0c3;
+  font-size: 13px;
+}
+
+.admin-review small {
+  display: block;
+}
+
+@media(max-width: 600px) {
+  .admin-stats {
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 6px;
+  }
+
+  .admin-stat {
+    padding: 10px 6px;
+  }
+
+  .admin-stat b {
+    font-size: 19px;
+  }
+
+  .admin-review {
+    flex-direction: column;
+  }
+}
