@@ -471,8 +471,6 @@ async function downloadAddon(a) {
   }
 
   try {
-    toast('Menyiapkan download...');
-
     const fileName = a.file_name || 'addon.mcaddon';
 
     const { data } = db.storage
@@ -485,16 +483,18 @@ async function downloadAddon(a) {
       throw new Error('Link download tidak tersedia.');
     }
 
+    toast('Menyiapkan download...');
+
     const { error } = await db.rpc('increment_addon_download', {
       addon_id_input: a.id
     });
 
-    if (error) throw error;
+    if (error) console.error(error);
 
     window.location.href = data.publicUrl;
 
-    setTimeout(async () => {
-      await loadAddons();
+    setTimeout(() => {
+      loadAddons();
     }, 2000);
 
   } catch (error) {
