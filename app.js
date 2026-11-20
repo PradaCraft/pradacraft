@@ -578,6 +578,61 @@ async function uploadFile(file, path) {
   return path;
 }
 
+ // ======================================
+ // HAPUS ADDON
+ // ======================================
+
+async function deleteAddon(id) {
+  if (!isOwner()) {
+    toast('Hanya Owner yang boleh menghapus addon.');
+    return;
+  }
+
+  const addon = addons.find(a => a.id === id);
+
+  if (!addon) {
+    toast('Addon tidak ditemukan.');
+    return;
+  }
+
+  if (!confirm(`Yakin ingin menghapus addon "${addon.name}"?`)) {
+    return;
+  }
+
+  const { error } = await db
+    .from('addons')
+    .delete()
+    .eq('id', id);
+
+  if (error) {
+    console.error(error);
+    toast('Gagal menghapus addon: ' + error.message);
+    return;
+  }
+
+  const filesToDelete = [
+    addon.file_path,
+    addon.image_path
+  ].filter(Boolean);
+
+  if (filesToDelete.length) {
+    const { error: storageError } = await db
+      .storage
+      .from(BUCKET)
+      .remove(filesToDelete);
+
+    if (storageError) {
+      console.error('Gagal menghapus file Storage:', storageError);
+      toast('Addon terhapus, tetapi file lama belum terhapus.');
+    }
+  }
+
+  toast('Addon berhasil dihapus!');
+
+  await loadAddons();
+  await renderAdmin();
+}
+
 // ======================================
 // ADMIN PANEL
 // ======================================
