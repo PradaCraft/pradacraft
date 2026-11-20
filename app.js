@@ -663,18 +663,21 @@ async function editAdminAddon(id) {
   if (!isOwner()) return;
 
   const a = addons.find(x => x.id === id);
-  if (!a) return;
+  if (!a) {
+    toast('Addon tidak ditemukan.');
+    return;
+  }
 
-  const name = prompt('Nama addon:', a.name);
+  const name = prompt('Edit nama addon:', a.name);
   if (name === null) return;
 
-  const category = prompt('Kategori:', a.category);
+  const category = prompt('Edit kategori:', a.category);
   if (category === null) return;
 
-  const version = prompt('Versi:', a.version || '');
+  const version = prompt('Edit versi:', a.version || '');
   if (version === null) return;
 
-  const description = prompt('Deskripsi:', a.description || '');
+  const description = prompt('Edit deskripsi addon:', a.description || '');
   if (description === null) return;
 
   if (!name.trim() || !description.trim()) {
@@ -695,7 +698,7 @@ async function editAdminAddon(id) {
     return;
   }
 
-  toast('Addon berhasil diperbarui.');
+  toast('Addon berhasil diperbarui!');
   await loadAddons();
   await renderAdmin();
 }
