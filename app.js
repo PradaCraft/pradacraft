@@ -820,26 +820,64 @@ $('#menuBtn').onclick = () => {
   $('#nav').classList.toggle('open');
 };
 
-// ======================================
+// ========================================
 // EVENT WEBSITE
-// ======================================
+// ========================================
 
 document.addEventListener('click', e => {
-  const c = e.target.closest('[data-id]');
+  const target = e.target;
 
-  if (c) openDetail(c.dataset.id);
-
-  const close = e.target.dataset.close;
-
-  if (close) {
-    $('#' + (close === 'detail' ? 'detailModal' : 'adminModal'))
-      .classList.add('hidden');
+  // HAPUS ADDON
+  const del = target.closest('[data-delete]');
+  if (del) {
+    e.preventDefault();
+    e.stopPropagation();
+    deleteAddon(del.dataset.delete);
+    return;
   }
 
-  const del = e.target.dataset.delete;
+  // EDIT, FOTO, DAN HAPUS FOTO
+  const adminAction = target.closest('[data-admin-action]');
+  if (adminAction) {
+    e.preventDefault();
+    e.stopPropagation();
 
-  if (del) deleteAddon(del);
+    const id = adminAction.dataset.addonId;
+    const action = adminAction.dataset.adminAction;
+
+    if (action === 'edit') editAdminAddon(id);
+    if (action === 'photo') replaceAdminImage(id);
+    if (action === 'remove-photo') removeAdminImage(id);
+    return;
+  }
+
+  // HAPUS KOMENTAR
+  const reviewDelete = target.closest('[data-delete-review]');
+  if (reviewDelete) {
+    e.preventDefault();
+    e.stopPropagation();
+    deleteAdminReview(reviewDelete.dataset.deleteReview);
+    return;
+  }
+
+  // BUKA DETAIL ADDON
+  const card = target.closest('[data-id]');
+  if (card) {
+    openDetail(card.dataset.id);
+    return;
+  }
+
+  // TUTUP MODAL
+  const close = target.closest('[data-close]')?.dataset.close;
+
+  if (close) {
+    const modalId = close === 'detail' ? 'detailModal' : 'adminModal';
+    $('#' + modalId).classList.add('hidden');
+  }
 });
+
+// PENCARIAN ADMIN
+$('#adminSearch')?.addEventListener('input', renderAdmin);
 
 // ======================================
 // FORM UPLOAD
