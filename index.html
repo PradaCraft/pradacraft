@@ -44,7 +44,21 @@
  <label>File addon (.mcaddon / .mcpack / .zip)<input name="file" type="file" accept=".mcaddon,.mcpack,.zip,.mcworld,.mctemplate" required></label>
  <button class="btn primary full" type="submit">Publish Addon ↗</button>
 </form><div class="admin-note">Catatan: versi demo ini menyimpan data di browser/perangkat ini. Untuk website publik multi-pengguna, perlu hosting dan database/backend.</div>
-<div class="admin-list"><h3>Addon milikmu</h3><div id="adminList"></div></div>
+<div class="admin-list">
+  <h3>📊 Statistik Admin</h3>
+  <div id="adminStats" class="admin-stats"></div>
+</div>
+
+<div class="admin-list">
+  <h3>📦 Kelola Addon</h3>
+  <input id="adminSearch" placeholder="Cari addon..." autocomplete="off">
+  <div id="adminList"></div>
+</div>
+
+<div class="admin-list">
+  <h3>⭐ Kelola Rating & Komentar</h3>
+  <div id="adminReviewList"></div>
+</div>
 </article></div>
 <div class="toast" id="toast"></div>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
