@@ -938,24 +938,20 @@ $('#menuBtn').onclick = () => {
   $('#nav').classList.toggle('open');
 };
 
-// ========================================
-// EVENT WEBSITE
-// ========================================
+ // ========================================
+ // EVENT WEBSITE
+ // ========================================
 
-document.addEventListener('click', e => {
-  const target = e.target;
+document.addEventListener('click', function(e) {
+  const target = e.target instanceof Element
+    ? e.target
+    : e.target.parentElement;
 
-  // HAPUS ADDON
-  const del = target.closest('[data-delete]');
-  if (del) {
-    e.preventDefault();
-    e.stopPropagation();
-    deleteAddon(del.dataset.delete);
-    return;
-  }
+  if (!target) return;
 
-  // EDIT, FOTO, DAN HAPUS FOTO
+  // EDIT, FOTO, HAPUS FOTO
   const adminAction = target.closest('[data-admin-action]');
+
   if (adminAction) {
     e.preventDefault();
     e.stopPropagation();
@@ -963,14 +959,30 @@ document.addEventListener('click', e => {
     const id = adminAction.dataset.addonId;
     const action = adminAction.dataset.adminAction;
 
-    if (action === 'edit') editAdminAddon(id);
-    if (action === 'photo') replaceAdminImage(id);
-    if (action === 'remove-photo') removeAdminImage(id);
+    if (action === 'edit') {
+      editAdminAddon(id);
+    } else if (action === 'photo') {
+      replaceAdminImage(id);
+    } else if (action === 'remove-photo') {
+      removeAdminImage(id);
+    }
+
+    return;
+  }
+
+  // HAPUS ADDON
+  const del = target.closest('[data-delete]');
+
+  if (del) {
+    e.preventDefault();
+    e.stopPropagation();
+    deleteAddon(del.dataset.delete);
     return;
   }
 
   // HAPUS KOMENTAR
   const reviewDelete = target.closest('[data-delete-review]');
+
   if (reviewDelete) {
     e.preventDefault();
     e.stopPropagation();
@@ -980,6 +992,7 @@ document.addEventListener('click', e => {
 
   // BUKA DETAIL ADDON
   const card = target.closest('[data-id]');
+
   if (card) {
     openDetail(card.dataset.id);
     return;
@@ -989,8 +1002,11 @@ document.addEventListener('click', e => {
   const close = target.closest('[data-close]')?.dataset.close;
 
   if (close) {
-    const modalId = close === 'detail' ? 'detailModal' : 'adminModal';
-    $('#' + modalId).classList.add('hidden');
+    const modalId = close === 'detail'
+      ? 'detailModal'
+      : 'adminModal';
+
+    $('#' + modalId)?.classList.add('hidden');
   }
 });
 
