@@ -676,25 +676,64 @@ async function renderAdmin() {
   );
 
   $('#adminList').innerHTML = filtered.map(a => `
-    <div class="admin-item admin-addon-item">
-      ${a.image_path
-        ? `<img class="admin-thumb" src="${esc(imageUrl(a.image_path))}" alt="">`
-        : '<div class="admin-thumb admin-no-image">⬡</div>'}
-
-      <div class="admin-addon-info">
-        <b>${esc(a.name)}</b>
-        <small>${esc(a.category)} · ${esc(a.version || '')}</small>
-        <small>↓ ${Number(a.downloads || 0)} download · ★ ${Number(a.rating || 0).toFixed(1)}</small>
-      </div>
-
-      <div class="admin-actions">
-        <button data-admin-action="edit" data-addon-id="${esc(a.id)}">Edit</button>
-        <button data-admin-action="photo" data-addon-id="${esc(a.id)}">Foto</button>
-        <button data-admin-action="remove-photo" data-addon-id="${esc(a.id)}">Hapus Foto</button>
-        <button class="delete-btn" data-delete="${esc(a.id)}">Hapus Addon</button>
-      </div>
+  <div class="admin-item admin-addon-item">
+    <div class="admin-addon-info">
+      <h3>${esc(a.name || 'Tanpa Nama')}</h3>
+      <p>${esc(a.category || 'Lainnya')} • Versi ${esc(a.version || '-')}</p>
     </div>
-  `).join('') || '<p class="muted">Addon tidak ditemukan.</p>';
+
+    <div class="admin-actions">
+      <button type="button" data-admin-action="edit" data-addon-id="${esc(a.id)}">
+        Edit
+      </button>
+
+      <button type="button" data-admin-action="photo" data-addon-id="${esc(a.id)}">
+        Ganti Foto
+      </button>
+
+      <button type="button" data-admin-action="remove-photo" data-addon-id="${esc(a.id)}">
+        Hapus Foto
+      </button>
+
+      <button type="button" class="delete-btn" data-delete="${esc(a.id)}">
+        Hapus Addon
+      </button>
+    </div>
+  </div>
+`).join('') || '<p class="muted">Addon tidak ditemukan.</p>';
+
+// HUBUNGKAN TOMBOL ADMIN
+$('#adminList').querySelectorAll('[data-admin-action="edit"]').forEach(button => {
+  button.onclick = e => {
+    e.preventDefault();
+    e.stopPropagation();
+    editAdminAddon(button.dataset.addonId);
+  };
+});
+
+$('#adminList').querySelectorAll('[data-admin-action="photo"]').forEach(button => {
+  button.onclick = e => {
+    e.preventDefault();
+    e.stopPropagation();
+    replaceAdminImage(button.dataset.addonId);
+  };
+});
+
+$('#adminList').querySelectorAll('[data-admin-action="remove-photo"]').forEach(button => {
+  button.onclick = e => {
+    e.preventDefault();
+    e.stopPropagation();
+    removeAdminImage(button.dataset.addonId);
+  };
+});
+
+$('#adminList').querySelectorAll('[data-delete]').forEach(button => {
+  button.onclick = e => {
+    e.preventDefault();
+    e.stopPropagation();
+    deleteAddon(button.dataset.delete);
+  };
+});
 
   const addonNames = Object.fromEntries(
     list.map(a => [a.id, a.name])
