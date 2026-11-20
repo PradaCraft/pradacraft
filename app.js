@@ -473,33 +473,29 @@ async function downloadAddon(a) {
   try {
     toast('Menyiapkan download...');
 
-    const { data: file, error: downloadError } =
-      await db.storage.from(BUCKET).download(a.file_path);
+    const fileName = a.file_name || 'addon.mcaddon';
 
-    if (downloadError) throw downloadError;
+    const { data } = db.storage
+      .from(BUCKET)
+      .getPublicUrl(a.file_path, {
+        download: fileName
+      });
 
-    const fileUrl = URL.createObjectURL(file);
-    const link = document.createElement('a');
-
-    link.href = fileUrl;
-    link.download = a.file_name || 'addon.mcaddon';
-
-    document.body.appendChild(link);
-    link.click();
-    link.remove();
-
-    setTimeout(() => URL.revokeObjectURL(fileUrl), 3000);
+    if (!data?.publicUrl) {
+      throw new Error('Link download tidak tersedia.');
+    }
 
     const { error } = await db.rpc('increment_addon_download', {
       addon_id_input: a.id
     });
 
-    if (error) console.error(error);
+    if (error) throw error;
 
-    toast('Download dimulai!');
+    window.location.href = data.publicUrl;
 
-    await loadAddons();
-    await openDetail(a.id);
+    setTimeout(async () => {
+      await loadAddons();
+    }, 2000);
 
   } catch (error) {
     console.error(error);
