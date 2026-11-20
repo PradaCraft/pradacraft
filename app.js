@@ -472,29 +472,43 @@ async function downloadAddon(a) {
     return;
   }
 
-  const { error } = await db.rpc('increment_addon_download', {
-    addon_id_input: a.id
-  });
+  try {
+    const { error } = await db.rpc('increment_addon_download', {
+      addon_id_input: a.id
+    });
 
-  if (error) {
-    toast('Gagal menghitung download.');
+    if (error) throw error;
+
+    // Ambil file dari Storage
+    const response = await fetch(url);
+
+    if (!response.ok) {
+      throw new Error('Gagal mengambil file addon.');
+    }
+
+    const blob = await response.blob();
+    const blobUrl = URL.createObjectURL(blob);
+
+    // Gunakan nama file asli saat upload
+    const link = document.createElement('a');
+    link.href = blobUrl;
+    link.download = a.file_name || 'addon.mcaddon';
+
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+
+    setTimeout(() => URL.revokeObjectURL(blobUrl), 1000);
+
+    toast('Download dimulai!');
+
+    await loadAddons();
+    await openDetail(a.id);
+
+  } catch (error) {
     console.error(error);
-    return;
+    toast('Download gagal: ' + error.message);
   }
-
-  const link = document.createElement('a');
-  link.href = url;
-  link.download = a.file_name || 'addon.mcaddon';
-  link.target = '_blank';
-
-  document.body.appendChild(link);
-  link.click();
-  link.remove();
-
-  toast('Download dimulai!');
-
-  await loadAddons();
-  await openDetail(a.id);
 }
 
 // ======================================
