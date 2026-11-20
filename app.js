@@ -668,39 +668,99 @@ async function editAdminAddon(id) {
     return;
   }
 
-  const name = prompt('Edit nama addon:', a.name);
-  if (name === null) return;
+  document.getElementById('adminEditModal')?.remove();
 
-  const category = prompt('Edit kategori:', a.category);
-  if (category === null) return;
+  const modal = document.createElement('div');
+  modal.id = 'adminEditModal';
+  modal.className = 'admin-edit-overlay';
 
-  const version = prompt('Edit versi:', a.version || '');
-  if (version === null) return;
+  modal.innerHTML = `
+    <div class="admin-edit-box">
+      <div class="admin-edit-header">
+        <div>
+          <span class="admin-edit-label">PRADACRAFT ADMIN</span>
+          <h2>Edit Addon</h2>
+          <p>Perbarui informasi addon kamu.</p>
+        </div>
+        <button type="button" class="admin-edit-close">×</button>
+      </div>
 
-  const description = prompt('Edit deskripsi addon:', a.description || '');
-  if (description === null) return;
+      <form id="adminEditForm">
+        <label>Nama Addon</label>
+        <input name="name" value="${esc(a.name || '')}" required>
 
-  if (!name.trim() || !description.trim()) {
-    toast('Nama dan deskripsi tidak boleh kosong.');
-    return;
-  }
+        <div class="admin-edit-grid">
+          <div>
+            <label>Kategori</label>
+            <input name="category" value="${esc(a.category || '')}" required>
+          </div>
+          <div>
+            <label>Versi</label>
+            <input name="version" value="${esc(a.version || '')}">
+          </div>
+        </div>
 
-  const { error } = await db.from('addons').update({
-    name: name.trim(),
-    category: category.trim(),
-    version: version.trim(),
-    description: description.trim()
-  }).eq('id', id);
+        <label>Deskripsi Addon</label>
+        <textarea name="description" rows="8" required>${esc(a.description || '')}</textarea>
 
-  if (error) {
-    console.error(error);
-    toast('Gagal mengedit addon: ' + error.message);
-    return;
-  }
+        <div class="admin-edit-footer">
+          <button type="button" class="admin-cancel">Batal</button>
+          <button type="submit" class="admin-save">Simpan Perubahan ↗</button>
+        </div>
+      </form>
+    </div>
+  `;
 
-  toast('Addon berhasil diperbarui!');
-  await loadAddons();
-  await renderAdmin();
+  document.body.appendChild(modal);
+
+  const closeModal = () => modal.remove();
+
+  modal.querySelector('.admin-edit-close').onclick = closeModal;
+  modal.querySelector('.admin-cancel').onclick = closeModal;
+
+  modal.addEventListener('click', e => {
+    if (e.target === modal) closeModal();
+  });
+
+  modal.querySelector('#adminEditForm').onsubmit = async e => {
+    e.preventDefault();
+
+    const form = new FormData(e.target);
+    const button = modal.querySelector('.admin-save');
+
+    const updates = {
+      name: form.get('name').trim(),
+      category: form.get('category').trim(),
+      version: form.get('version').trim(),
+      description: form.get('description').trim()
+    };
+
+    if (!updates.name || !updates.description) {
+      toast('Nama dan deskripsi wajib diisi.');
+      return;
+    }
+
+    button.disabled = true;
+    button.textContent = 'Menyimpan...';
+
+    const { error } = await db
+      .from('addons')
+      .update(updates)
+      .eq('id', id);
+
+    if (error) {
+      console.error(error);
+      toast('Gagal menyimpan: ' + error.message);
+      button.disabled = false;
+      button.textContent = 'Simpan Perubahan ↗';
+      return;
+    }
+
+    closeModal();
+    toast('Addon berhasil diperbarui!');
+    await loadAddons();
+    await renderAdmin();
+  };
 }
 
 async function replaceAdminImage(id) {
