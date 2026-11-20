@@ -470,34 +470,62 @@ async function downloadAddon(a) {
     return;
   }
 
+  const fileName = a.file_name || 'addon.mcaddon';
+  const countKey = `pradacraft_download_${a.id}`;
+
   try {
-    const fileName = a.file_name || 'addon.mcaddon';
+    toast('Menyiapkan download...');
 
-    const { data } = db.storage
+    const { data, error } = await db.storage
       .from(BUCKET)
-      .getPublicUrl(a.file_path);
+      .createSignedUrl(a.file_path, 300, {
+        download: fileName
+      });
 
-    if (!data?.publicUrl) {
+    if (error) throw error;
+    if (!data?.signedUrl) {
       throw new Error('Link download tidak tersedia.');
     }
 
-    const downloadUrl = new URL(data.publicUrl);
-    downloadUrl.searchParams.set('download', fileName);
-
-    toast('Menyiapkan download...');
-
-    const { error } = await db.rpc('increment_addon_download', {
-      addon_id_input: a.id
+    // Cek file terlebih dahulu tanpa mengunduhnya dua kali.
+    const response = await fetch(data.signedUrl, {
+      method: 'HEAD'
     });
 
-    if (error) console.error(error);
+    if (!response.ok) {
+      throw new Error('File gagal diakses dari server.');
+    }
 
-    window.location.href = downloadUrl.toString();
+    // Mulai proses download.
+    const link = document.createElement('a');
+    link.href = data.signedUrl;
+    link.download = fileName;
+    link.style.display = 'none';
 
-    setTimeout(loadAddons, 2000);
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+
+    // Hitung satu kali per addon pada browser ini.
+    if (!localStorage.getItem(countKey)) {
+      const { error: countError } = await db.rpc(
+        'increment_addon_download',
+        { addon_id_input: a.id }
+      );
+
+      if (countError) {
+        console.error('Download count error:', countError);
+      } else {
+        localStorage.setItem(countKey, '1');
+      }
+    }
+
+    toast('Download dimulai!');
+
+    await loadAddons();
 
   } catch (error) {
-    console.error(error);
+    console.error('Download error:', error);
     toast('Download gagal: ' + error.message);
   }
 }
