@@ -465,40 +465,36 @@ async function openDetail(id) {
 // ======================================
 
 async function downloadAddon(a) {
-  const url = imageUrl(a.file_path);
-
-  if (!url) {
+  if (!a.file_path) {
     toast('File addon tidak ditemukan.');
     return;
   }
 
   try {
-    const { error } = await db.rpc('increment_addon_download', {
-      addon_id_input: a.id
-    });
+    toast('Menyiapkan download...');
 
-    if (error) throw error;
+    const { data: file, error: downloadError } =
+      await db.storage.from(BUCKET).download(a.file_path);
 
-    // Ambil file dari Storage
-    const response = await fetch(url);
+    if (downloadError) throw downloadError;
 
-    if (!response.ok) {
-      throw new Error('Gagal mengambil file addon.');
-    }
-
-    const blob = await response.blob();
-    const blobUrl = URL.createObjectURL(blob);
-
-    // Gunakan nama file asli saat upload
+    const fileUrl = URL.createObjectURL(file);
     const link = document.createElement('a');
-    link.href = blobUrl;
+
+    link.href = fileUrl;
     link.download = a.file_name || 'addon.mcaddon';
 
     document.body.appendChild(link);
     link.click();
     link.remove();
 
-    setTimeout(() => URL.revokeObjectURL(blobUrl), 1000);
+    setTimeout(() => URL.revokeObjectURL(fileUrl), 3000);
+
+    const { error } = await db.rpc('increment_addon_download', {
+      addon_id_input: a.id
+    });
+
+    if (error) console.error(error);
 
     toast('Download dimulai!');
 
