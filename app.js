@@ -585,62 +585,213 @@ async function uploadFile(file, path) {
 async function renderAdmin() {
   if (!isOwner()) return;
 
-  const { data, error } = await db
-    .from('addons')
-    .select('*')
-    .order('created_at', { ascending: false });
+  const [{ data: dataAddons, error: addonError },
+         { data: reviews, error: reviewError }] = await Promise.all([
+    db.from('addons').select('*').order('created_at', { ascending: false }),
+    db.from('reviews').select('*').order('created_at', { ascending: false })
+  ]);
 
-  if (error) {
-    toast('Gagal memuat daftar admin.');
+  if (addonError) {
+    console.error(addonError);
+    toast('Gagal memuat addon admin.');
     return;
   }
 
-  $('#adminList').innerHTML = (data || []).map(a => `
-    <div class="admin-item">
-      <span>
-        ${esc(a.name)}
-        <span class="muted">(${esc(a.category)})</span>
-      </span>
+  if (reviewError) {
+    console.error(reviewError);
+    toast('Gagal memuat komentar.');
+  }
 
-      <button class="delete-btn" data-delete="${esc(a.id)}">
-        Hapus
-      </button>
+  const list = dataAddons || [];
+  const comments = reviews || [];
+  const search = ($('#adminSearch')?.value || '').toLowerCase();
+
+  const totalDownloads = list.reduce(
+    (sum, a) => sum + Number(a.downloads || 0), 0
+  );
+
+  $('#adminStats').innerHTML = `
+    <div class="admin-stat"><b>${list.length}</b><span>Total Addon</span></div>
+    <div class="admin-stat"><b>${totalDownloads.toLocaleString('id-ID')}</b><span>Download</span></div>
+    <div class="admin-stat"><b>${comments.length}</b><span>Ulasan</span></div>
+  `;
+
+  const filtered = list.filter(a =>
+    `${a.name} ${a.category}`.toLowerCase().includes(search)
+  );
+
+  $('#adminList').innerHTML = filtered.map(a => `
+    <div class="admin-item admin-addon-item">
+      ${a.image_path
+        ? `<img class="admin-thumb" src="${esc(imageUrl(a.image_path))}" alt="">`
+        : '<div class="admin-thumb admin-no-image">⬡</div>'}
+
+      <div class="admin-addon-info">
+        <b>${esc(a.name)}</b>
+        <small>${esc(a.category)} · ${esc(a.version || '')}</small>
+        <small>↓ ${Number(a.downloads || 0)} download · ★ ${Number(a.rating || 0).toFixed(1)}</small>
+      </div>
+
+      <div class="admin-actions">
+        <button data-admin-action="edit" data-addon-id="${esc(a.id)}">Edit</button>
+        <button data-admin-action="photo" data-addon-id="${esc(a.id)}">Foto</button>
+        <button data-admin-action="remove-photo" data-addon-id="${esc(a.id)}">Hapus Foto</button>
+        <button class="delete-btn" data-delete="${esc(a.id)}">Hapus Addon</button>
+      </div>
     </div>
-  `).join('') || '<p class="muted">Belum ada addon.</p>';
+  `).join('') || '<p class="muted">Addon tidak ditemukan.</p>';
+
+  const addonNames = Object.fromEntries(
+    list.map(a => [a.id, a.name])
+  );
+
+  $('#adminReviewList').innerHTML = comments.map(r => `
+    <div class="admin-review">
+      <div>
+        <b>${esc(r.name || 'Pengunjung')}</b>
+        <span class="rating">${'★'.repeat(Number(r.rating || 0))}</span>
+        <small>${esc(addonNames[r.addon_id] || 'Addon tidak ditemukan')}</small>
+        <p>${esc(r.comment || '')}</p>
+      </div>
+      <button class="delete-btn"
+        data-delete-review="${esc(r.id)}">Hapus Komentar</button>
+    </div>
+  `).join('') || '<p class="muted">Belum ada komentar.</p>';
 }
 
-async function deleteAddon(id) {
+async function editAdminAddon(id) {
   if (!isOwner()) return;
 
   const a = addons.find(x => x.id === id);
+  if (!a) return;
 
-  if (!a || !confirm('Hapus addon ini dari katalog?')) return;
+  const name = prompt('Nama addon:', a.name);
+  if (name === null) return;
 
-  const paths = [a.image_path, a.file_path].filter(Boolean);
+  const category = prompt('Kategori:', a.category);
+  if (category === null) return;
 
-  const { error } = await db
-    .from('addons')
+  const version = prompt('Versi:', a.version || '');
+  if (version === null) return;
+
+  const description = prompt('Deskripsi:', a.description || '');
+  if (description === null) return;
+
+  if (!name.trim() || !description.trim()) {
+    toast('Nama dan deskripsi tidak boleh kosong.');
+    return;
+  }
+
+  const { error } = await db.from('addons').update({
+    name: name.trim(),
+    category: category.trim(),
+    version: version.trim(),
+    description: description.trim()
+  }).eq('id', id);
+
+  if (error) {
+    console.error(error);
+    toast('Gagal mengedit addon: ' + error.message);
+    return;
+  }
+
+  toast('Addon berhasil diperbarui.');
+  await loadAddons();
+  await renderAdmin();
+}
+
+async function replaceAdminImage(id) {
+  if (!isOwner()) return;
+
+  const a = addons.find(x => x.id === id);
+  if (!a) return;
+
+  const input = document.createElement('input');
+  input.type = 'file';
+  input.accept = 'image/*';
+
+  input.onchange = async () => {
+    const file = input.files[0];
+    if (!file) return;
+
+    const path = `${currentUser.id}/${Date.now()}-cover-${safeFileName(file.name)}`;
+
+    try {
+      await uploadFile(file, path);
+
+      const { error } = await db.from('addons')
+        .update({ image_path: path })
+        .eq('id', id);
+
+      if (error) {
+        await db.storage.from(BUCKET).remove([path]);
+        throw error;
+      }
+
+      if (a.image_path) {
+        const { error: removeError } = await db.storage
+          .from(BUCKET).remove([a.image_path]);
+        if (removeError) console.error(removeError);
+      }
+
+      toast('Foto addon berhasil diganti.');
+      await loadAddons();
+      await renderAdmin();
+
+    } catch (error) {
+      console.error(error);
+      toast('Gagal mengganti foto: ' + error.message);
+    }
+  };
+
+  input.click();
+}
+
+async function removeAdminImage(id) {
+  if (!isOwner()) return;
+
+  const a = addons.find(x => x.id === id);
+  if (!a?.image_path) {
+    toast('Addon ini belum memiliki foto.');
+    return;
+  }
+
+  if (!confirm('Hapus foto sampul addon ini?')) return;
+
+  const { error } = await db.from('addons')
+    .update({ image_path: null })
+    .eq('id', id);
+
+  if (error) {
+    toast('Gagal menghapus foto: ' + error.message);
+    return;
+  }
+
+  const { error: storageError } = await db.storage
+    .from(BUCKET).remove([a.image_path]);
+
+  if (storageError) console.error(storageError);
+
+  toast('Foto berhasil dihapus.');
+  await loadAddons();
+  await renderAdmin();
+}
+
+async function deleteAdminReview(id) {
+  if (!isOwner()) return;
+  if (!confirm('Yakin ingin menghapus komentar ini?')) return;
+
+  const { error } = await db.from('reviews')
     .delete()
     .eq('id', id);
 
   if (error) {
     console.error(error);
-    toast('Gagal menghapus addon.');
+    toast('Gagal menghapus komentar: ' + error.message);
     return;
   }
 
-  if (paths.length) {
-    const { error: storageError } = await db
-      .storage
-      .from(BUCKET)
-      .remove(paths);
-
-    if (storageError) console.error(storageError);
-  }
-
-  toast('Addon berhasil dihapus.');
-
-  await loadAddons();
+  toast('Komentar berhasil dihapus.');
   await renderAdmin();
 }
 
