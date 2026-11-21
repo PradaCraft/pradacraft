@@ -267,16 +267,26 @@ function openOwnerLoginModal() {
   $('#forgotPassword').classList.remove('hidden');
   $('#authSwitchText').classList.add('hidden');
   document.querySelector('.auth-divider')?.classList.add('hidden');
-  document.querySelector('.auth-providers')?.classList.add('hidden');
+  document.querySelector('.auth-providers')?.classList.remove('hidden');
   $('#loginModal').classList.remove('hidden');
 }
 
-async function loginProvider(provider) {
+async function loginProvider(provider, ownerMode = false) {
+  if (ownerMode && provider === 'github') {
+    localStorage.setItem('pradacraft_owner_github_login', '1');
+  }
+
   const { error } = await db.auth.signInWithOAuth({
     provider,
-    options: { redirectTo: window.location.origin + window.location.pathname }
+    options: {
+      redirectTo: 'https://pradacraft.github.io/pradacraft/'
+    }
   });
-  if (error) toast('Login ' + provider + ' gagal: ' + error.message);
+
+  if (error) {
+    if (ownerMode) localStorage.removeItem('pradacraft_owner_github_login');
+    toast('Login ' + provider + ' gagal: ' + error.message);
+  }
 }
 
 $('#emailAuthForm')?.addEventListener('submit', async e => {
@@ -338,8 +348,9 @@ $('#emailAuthForm')?.addEventListener('submit', async e => {
   }
 });
 
-$('#googleLogin')?.addEventListener('click', () => loginProvider('google'));
-$('#facebookLogin')?.addEventListener('click', () => loginProvider('facebook'));
+$('#googleLogin')?.addEventListener('click', () => loginProvider('google', authMode === 'owner'));
+$('#facebookLogin')?.addEventListener('click', () => loginProvider('facebook', authMode === 'owner'));
+$('#githubLogin')?.addEventListener('click', () => loginProvider('github', authMode === 'owner'));
 $('#forgotPassword')?.addEventListener('click', async () => {
   const email = $('#authEmail').value.trim();
   const button = $('#forgotPassword');
@@ -1480,6 +1491,24 @@ async function start() {
   updateOwnerControls();
 
   await refreshUser();
+
+  // OAuth GitHub untuk Owner hanya diterima jika kembali sebagai UID Owner yang sah.
+  if (localStorage.getItem('pradacraft_owner_github_login') === '1') {
+    localStorage.removeItem('pradacraft_owner_github_login');
+
+    if (isOwner()) {
+      $('#adminModal').classList.remove('hidden');
+      await renderAdmin();
+      toast('Berhasil masuk sebagai Owner melalui GitHub.');
+    } else if (currentUser) {
+      await db.auth.signOut();
+      currentUser = null;
+      updateAccountUI();
+      updateOwnerControls();
+      toast('Akun GitHub ini belum terhubung ke akun Owner PradaCraft.');
+    }
+  }
+
   await loadAddons();
 
   const params = new URLSearchParams(window.location.search);
