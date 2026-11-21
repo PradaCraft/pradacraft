@@ -692,10 +692,19 @@ function card(a) {
 function render() {
   const q = ($('#search')?.value || '').trim().toLowerCase();
   const sort = $('#sortBy')?.value || 'newest';
-  let list = addons.filter(a =>
-    (activeCategory === 'All' || a.category === activeCategory) &&
-    `${a.name} ${a.description} ${a.category} ${a.version || ''}`.toLowerCase().includes(q)
-  );
+  const versionFilter = $('#versionFilter')?.value || 'all';
+  let list = addons.filter(a => {
+    const version = String(a.version || '').toLowerCase();
+    const matchesVersion = versionFilter === 'all' ||
+      (versionFilter === 'unknown' && !version.trim()) ||
+      (versionFilter === '26' && /26(?:\.|\b)/.test(version)) ||
+      (versionFilter === '121' && /1\.21/.test(version)) ||
+      (versionFilter === '120' && /1\.20/.test(version)) ||
+      (versionFilter === '119' && /1\.19/.test(version));
+    return (activeCategory === 'All' || a.category === activeCategory) &&
+      matchesVersion &&
+      `${a.name} ${a.description} ${a.category} ${a.version || ''}`.toLowerCase().includes(q);
+  });
   list = [...list];
   if (sort === 'popular') list.sort((a,b) => Number(b.downloads||0)-Number(a.downloads||0));
   else if (sort === 'rating') list.sort((a,b) => Number(b.rating||0)-Number(a.rating||0));
@@ -703,6 +712,8 @@ function render() {
   else list.sort((a,b) => new Date(b.created_at||0)-new Date(a.created_at||0));
 
   $('#catalogGrid').innerHTML = list.map(card).join('');
+  const countLabel = $('#resultCount');
+  if (countLabel) countLabel.textContent = `Menampilkan ${list.length} dari ${addons.length} koleksi`;
   $('#empty').classList.toggle('hidden', list.length > 0);
   $('#popularGrid').innerHTML = [...addons].sort((a,b) => Number(b.downloads||0)-Number(a.downloads||0)).slice(0,3).map(card).join('');
   $('#latestGrid').innerHTML = [...addons].sort((a,b) => new Date(b.created_at||0)-new Date(a.created_at||0)).slice(0,3).map(card).join('');
@@ -1463,6 +1474,15 @@ async function deleteAdminReview(id) {
 
 $('#search').addEventListener('input', render);
 $('#sortBy')?.addEventListener('change', render);
+$('#versionFilter')?.addEventListener('change', render);
+$('#clearFilters')?.addEventListener('click', () => {
+  $('#search').value = '';
+  $('#sortBy').value = 'newest';
+  $('#versionFilter').value = 'all';
+  activeCategory = 'All';
+  document.querySelectorAll('.filter').forEach(b => b.classList.toggle('active', b.dataset.cat === 'All'));
+  render();
+});
 
 document.querySelectorAll('.filter').forEach(b => {
   b.onclick = () => {
