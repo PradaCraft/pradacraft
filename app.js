@@ -223,7 +223,8 @@ function openAccountModal() {
   $('#profileDisplayName').value = profileName();
   $('#profileEmail').textContent = currentUser.email || 'Email tidak tersedia';
   $('#profileAvatarPreview').innerHTML = avatarMarkup(profileName(), profileAvatar());
-  $('#profileVerified').innerHTML = isOwner() ? '<span class="verified-badge">✓</span> Owner PradaCraft terverifikasi' : 'Akun Pengunjung';
+  $('#profileIdentityName').innerHTML = '<span class="'+(isOwner()?'owner-name':'visitor-name')+'">'+esc(profileName())+'</span>'+ownerVerifiedMarkup(currentUser.id);
+  $('#profileVerified').textContent = isOwner() ? 'Owner PradaCraft terverifikasi' : 'Akun Pengunjung';
   $('#profileEditForm').classList.remove('hidden');
   $('#profileLogout').classList.remove('hidden');
   $('#profileSave').classList.remove('hidden');
@@ -242,7 +243,8 @@ async function openPublicProfile(userId, fallbackName, fallbackAvatar) {
   $('#profileDisplayName').value = name;
   $('#profileEmail').textContent = userId === currentUser?.id ? (currentUser.email || '') : 'Anggota PradaCraft';
   $('#profileAvatarPreview').innerHTML = avatarMarkup(name, profile.avatar_url || fallbackAvatar || '');
-  $('#profileVerified').innerHTML = ownerVerifiedMarkup(userId) || 'Pengunjung PradaCraft';
+  $('#profileIdentityName').innerHTML = '<span class="'+(userId === OWNER_UID?'owner-name':'visitor-name')+'">'+esc(name)+'</span>'+ownerVerifiedMarkup(userId);
+  $('#profileVerified').textContent = userId === OWNER_UID ? 'Owner PradaCraft terverifikasi' : 'Pengunjung PradaCraft';
   $('#profileEditForm').classList.add('hidden');
   $('#profileLogout').classList.add('hidden');
   $('#profileSave').classList.add('hidden');
@@ -338,7 +340,9 @@ function updateAccountUI() {
   const drawerAvatar = $('#drawerAccountAvatar');
   if (drawerAvatar) drawerAvatar.innerHTML = avatarMarkup(name, avatar);
   const drawerName = $('#drawerAccountName');
-  if (drawerName) drawerName.textContent = name;
+  if (drawerName) {
+    drawerName.innerHTML = '<span class="'+(isOwner()?'owner-name':'visitor-name')+'">'+esc(name)+'</span>'+ownerVerifiedMarkup(currentUser.id);
+  }
 }
 
 function openLoginModal(mode = 'login') {
