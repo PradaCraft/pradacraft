@@ -332,15 +332,74 @@ $('#googleLogin')?.addEventListener('click', () => loginProvider('google'));
 $('#facebookLogin')?.addEventListener('click', () => loginProvider('facebook'));
 $('#forgotPassword')?.addEventListener('click', async () => {
   const email = $('#authEmail').value.trim();
+  const button = $('#forgotPassword');
   if (!email) {
     toast('Masukkan email terlebih dahulu.');
     $('#authEmail').focus();
     return;
   }
-  const { error } = await db.auth.resetPasswordForEmail(email, {
-    redirectTo: window.location.origin + window.location.pathname
-  });
-  toast(error ? 'Gagal mengirim email reset: ' + error.message : 'Link reset kata sandi dikirim jika email terdaftar.');
+
+  button.disabled = true;
+  button.textContent = 'Mengirim link...';
+  try {
+    const { error } = await db.auth.resetPasswordForEmail(email, {
+      redirectTo: 'https://pradacraft.github.io/pradacraft/'
+    });
+    if (error) {
+      const message = error.message || 'Terjadi kesalahan.';
+      if (/rate limit|too many|cooldown|429/i.test(message)) {
+        toast('Supabase sedang membatasi pengiriman email. Tunggu sebentar lalu coba lagi.');
+      } else {
+        toast('Gagal mengirim email pemulihan: ' + message);
+      }
+    } else {
+      toast('Jika email terdaftar, link pemulihan akan dikirim. Periksa Inbox dan Spam.');
+    }
+  } catch (error) {
+    console.error('Password recovery request failed:', error);
+    toast('Tidak dapat mengirim email. Periksa koneksi lalu coba lagi.');
+  } finally {
+    button.disabled = false;
+    button.textContent = 'Lupa kata sandi?';
+  }
+});
+
+$('#passwordRecoveryForm')?.addEventListener('submit', async e => {
+  e.preventDefault();
+  const password = $('#newRecoveryPassword').value;
+  const confirmation = $('#confirmRecoveryPassword').value;
+  const button = $('#saveRecoveryPassword');
+
+  if (password.length < 8) {
+    toast('Password baru minimal 8 karakter.');
+    return;
+  }
+  if (password !== confirmation) {
+    toast('Konfirmasi password tidak sama.');
+    return;
+  }
+
+  button.disabled = true;
+  button.textContent = 'Menyimpan...';
+  try {
+    const { error } = await db.auth.updateUser({ password });
+    if (error) throw error;
+
+    $('#passwordRecoveryModal').classList.add('hidden');
+    $('#passwordRecoveryForm').reset();
+    $('#loginModal').classList.remove('hidden');
+    toast('Password berhasil diperbarui. Silakan login dengan password baru.');
+    await db.auth.signOut();
+    currentUser = null;
+    updateAccountUI();
+    updateOwnerControls();
+  } catch (error) {
+    console.error('Password update failed:', error);
+    toast('Gagal memperbarui password: ' + error.message);
+  } finally {
+    button.disabled = false;
+    button.textContent = 'Simpan Password Baru';
+  }
 });
 
 $('#switchAuthMode')?.addEventListener('click', () => {
@@ -1375,6 +1434,13 @@ db.auth.onAuthStateChange((event, session) => {
   currentUser = session?.user || null;
   updateOwnerControls();
   updateAccountUI();
+
+  if (event === 'PASSWORD_RECOVERY') {
+    $('#loginModal').classList.add('hidden');
+    $('#passwordRecoveryModal').classList.remove('hidden');
+    $('#newRecoveryPassword').value = '';
+    $('#confirmRecoveryPassword').value = '';
+  }
 
   if (event === 'SIGNED_IN' && isOwner()) {
     $('#adminModal').classList.remove('hidden');
