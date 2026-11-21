@@ -234,6 +234,9 @@ function openLoginModal(mode = 'login') {
   $('#authPassword').autocomplete = signup ? 'new-password' : 'current-password';
   $('#emailAuthSubmit').textContent = signup ? 'Daftar Akun' : 'Login';
   $('#forgotPassword').classList.toggle('hidden', signup);
+  $('#authSwitchText').classList.remove('hidden');
+  document.querySelector('.auth-divider')?.classList.remove('hidden');
+  document.querySelector('.auth-providers')?.classList.remove('hidden');
   $('#authSwitchText').innerHTML = signup
     ? 'Sudah punya akun? <button type="button" id="switchAuthMode">Login</button>'
     : 'Belum punya akun? <button type="button" id="switchAuthMode">Daftar</button>';
