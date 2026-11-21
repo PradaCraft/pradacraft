@@ -454,11 +454,13 @@ async function openDetail(id) {
     .order('created_at', { ascending: false });
 
   const comments = reviews || [];
+  const { data: myReview, error: myReviewError } = currentUser
+    ? await db.from('reviews').select('id').eq('addon_id', id).eq('user_id', currentUser.id).maybeSingle()
+    : { data: null, error: null };
+  if (myReviewError) console.error('Cek ulasan akun gagal:', myReviewError);
 
-  const avg = comments.length
-    ? comments.reduce((s, r) => s + r.rating, 0) / comments.length
-    : Number(a.rating || 0);
-
+  const avg = Number(a.rating || 0);
+  const ratingCount = Number(a.votes || comments.length || 0);
   const image = imageUrl(a.image_path);
 
   $('#detailContent').innerHTML = `
@@ -475,7 +477,7 @@ async function openDetail(id) {
     <div class="detail-meta">
       <span>◈ ${esc(a.version || 'Bedrock')}</span>
       <span class="rating">
-        ★ ${avg.toFixed(1)} (${comments.length} ratings)
+        ★ ${avg.toFixed(1)} (${ratingCount} ratings)
       </span>
       <span>↓ ${Number(a.downloads || 0)} downloads</span>
     </div>
@@ -510,6 +512,7 @@ async function openDetail(id) {
     <div class="review-box">
       <h3>Rate this addon</h3>
 
+      ${myReview ? '<p class="muted">Kamu sudah memberi rating dan komentar untuk addon ini. Ulasan yang sudah dikirim tidak dapat diedit atau dikirim ulang.</p>' : `
       <div class="stars">
         ${[1,2,3,4,5].map(n =>
           `<button class="star ${n <= selectedRating ? 'selected' : ''}"
@@ -522,7 +525,7 @@ async function openDetail(id) {
 
       <button class="btn ghost" id="sendReview">
         Kirim rating & komentar
-      </button>
+      </button>`}
 
       <h3 style="margin-top:20px">Komentar pengunjung</h3>
 
@@ -615,7 +618,7 @@ async function openDetail(id) {
     };
   });
 
-  $('#sendReview').onclick = () => submitReview(a.id);
+  if ($('#sendReview')) $('#sendReview').onclick = () => submitReview(a.id);
 }
 
 // ======================================
@@ -693,16 +696,32 @@ async function downloadAddon(a) {
 // ======================================
 
 async function submitReview(id) {
-  const comment = $('#commentText').value.trim();
+  await refreshUser();
 
+  if (!currentUser) {
+    toast('Login terlebih dahulu untuk memberi rating dan komentar.');
+    openLoginModal('login');
+    return;
+  }
+
+  const comment = $('#commentText')?.value.trim() || '';
   if (!comment) {
     toast('Tulis komentar terlebih dahulu.');
     return;
   }
 
-  if (!currentUser) {
-    toast('Login terlebih dahulu agar nama dan foto profil tampil di komentar.');
-    openLoginModal('login');
+  const { data: existingReview, error: checkError } = await db
+    .from('reviews').select('id').eq('addon_id', id)
+    .eq('user_id', currentUser.id).maybeSingle();
+
+  if (checkError) {
+    console.error(checkError);
+    toast('Gagal memeriksa ulasan akun.');
+    return;
+  }
+  if (existingReview) {
+    toast('Kamu sudah pernah memberi rating dan komentar untuk addon ini.');
+    await openDetail(id);
     return;
   }
 
@@ -717,7 +736,13 @@ async function submitReview(id) {
 
   if (error) {
     console.error(error);
-    toast('Gagal mengirim ulasan.');
+    if (error.code === '23505') {
+      toast('Kamu hanya boleh memberi satu ulasan untuk addon ini.');
+    } else if (error.code === '42501') {
+      toast('Login diperlukan untuk mengirim ulasan.');
+    } else {
+      toast('Gagal mengirim ulasan: ' + error.message);
+    }
     return;
   }
 
