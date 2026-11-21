@@ -2111,3 +2111,84 @@ body.drawer-open .drawer-backdrop{opacity:1;visibility:visible}body.drawer-open 
   .version-filter { align-items:stretch; flex-direction:column; gap:6px; }
   .version-filter select,.clear-filters { width:100%; min-height:42px; }
 }
+
+
+/* PRADACRAFT GLASS / DARK DISCOVERY REDESIGN */
+body {
+  background:
+    radial-gradient(ellipse at 12% 4%,rgba(130,255,95,.12),transparent 30%),
+    radial-gradient(ellipse at 90% 32%,rgba(50,120,80,.10),transparent 32%),
+    linear-gradient(180deg,#080b09 0%,#090d0b 48%,#070908 100%);
+  background-attachment: fixed;
+}
+.topbar {
+  background:rgba(5,8,7,.76);
+  border-bottom-color:rgba(255,255,255,.09);
+  box-shadow:0 12px 38px rgba(0,0,0,.16);
+}
+.hero-copy,.hero-art,.catalog-tools,.addon-card,.cta,.dialog,.side-drawer {
+  backdrop-filter:blur(18px);
+}
+.hero-copy {
+  padding:26px;
+  border:1px solid rgba(255,255,255,.09);
+  border-radius:24px;
+  background:linear-gradient(135deg,rgba(255,255,255,.055),rgba(0,0,0,.24));
+  box-shadow:0 22px 70px rgba(0,0,0,.20);
+}
+.hero-art {
+  border:1px solid rgba(255,255,255,.07);
+  border-radius:28px;
+  background:linear-gradient(145deg,rgba(255,255,255,.045),rgba(0,0,0,.18));
+}
+.ticker {
+  background:rgba(0,0,0,.28);
+  border-color:rgba(255,255,255,.09);
+  backdrop-filter:blur(12px);
+}
+.section { position:relative; }
+.catalog-tools {
+  background:rgba(7,11,9,.68);
+  border-color:rgba(255,255,255,.11);
+  box-shadow:0 12px 36px rgba(0,0,0,.16);
+}
+.filter {
+  background:rgba(10,15,12,.72);
+  border-color:rgba(255,255,255,.11);
+  backdrop-filter:blur(10px);
+}
+.filter.active,.filter:hover {
+  background:rgba(163,255,75,.13);
+  border-color:rgba(163,255,75,.55);
+  box-shadow:0 0 22px rgba(163,255,75,.07);
+}
+.addon-card {
+  border-color:rgba(255,255,255,.10);
+  background:linear-gradient(145deg,rgba(26,34,29,.83),rgba(8,12,10,.88));
+  box-shadow:0 14px 38px rgba(0,0,0,.18);
+}
+.addon-card:hover {
+  border-color:rgba(163,255,75,.52);
+  box-shadow:0 20px 48px rgba(0,0,0,.32),0 0 28px rgba(163,255,75,.06);
+}
+.cover { background:linear-gradient(145deg,#1d3023,#090e0b); }
+.category-pill {
+  background:rgba(4,8,6,.72);
+  backdrop-filter:blur(10px);
+}
+.cta {
+  background:linear-gradient(120deg,rgba(163,255,75,.10),rgba(255,255,255,.035)),rgba(8,13,10,.76);
+  border-color:rgba(255,255,255,.12);
+  box-shadow:0 20px 60px rgba(0,0,0,.20);
+}
+.dialog {
+  background:rgba(12,17,14,.94);
+  border-color:rgba(255,255,255,.13);
+  box-shadow:0 30px 100px rgba(0,0,0,.62);
+}
+.upload-hint { margin:-4px 0 14px; color:var(--muted); font-size:12px; line-height:1.5; }
+@media(max-width:760px) {
+  .hero-copy { padding:20px; }
+  .hero-art { border-radius:20px; }
+  .addon-card { background:rgba(15,21,17,.9); }
+}
