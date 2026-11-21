@@ -222,6 +222,11 @@ function updateAccountUI() {
 
 function openLoginModal(mode = 'login') {
   authMode = mode;
+  // Selalu mulai dengan kolom kredensial kosong saat modal dibuka.
+  $('#authEmail').value = '';
+  $('#authPassword').value = '';
+  $('#authName').value = '';
+  $('#emailAuthForm')?.classList.remove('was-validated');
   const signup = mode === 'signup';
   $('#loginTitle').innerHTML = signup
     ? 'Buat <span class="green">Akun</span>'
@@ -248,6 +253,11 @@ function openLoginModal(mode = 'login') {
 
 function openOwnerLoginModal() {
   authMode = 'owner';
+  // Jangan tampilkan kembali email/password dari sesi form sebelumnya.
+  $('#authEmail').value = '';
+  $('#authPassword').value = '';
+  $('#authName').value = '';
+  $('#emailAuthForm')?.classList.remove('was-validated');
   $('#loginTitle').innerHTML = 'Login <span class="green">Owner</span>';
   $('#loginDescription').textContent = 'Masuk menggunakan email dan kata sandi akun Owner PradaCraft.';
   $('#authNameWrap').classList.add('hidden');
