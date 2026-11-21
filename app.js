@@ -1320,7 +1320,7 @@ async function start() {
 
   const params = new URLSearchParams(window.location.search);
 
-  if (params.get('admin') === 'login' && !isOwner()) {
+  if ((params.get('admin') === 'login' || window.location.pathname.endsWith('/owner.html')) && !isOwner()) {
     await loginGitHub();
   }
 }
