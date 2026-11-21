@@ -659,20 +659,22 @@ async function loadAddons() {
 
 function card(a) {
   const image = a.image_url || '';
+  const skin = a.category === 'Skin';
+  const skinModel = skin ? (String(a.version || '').match(/Model:\s*([^•]+)/i)?.[1]?.trim() || 'Model tidak dicantumkan') : '';
 
   return `
-    <article class="addon-card" data-id="${esc(a.id)}">
+    <article class="addon-card ${skin ? 'skin-card' : ''}" data-id="${esc(a.id)}">
       <div class="cover">
         ${image
           ? `<img src="${esc(image)}" alt="${esc(a.name)}">`
           : '<div class="cover-placeholder">⬡</div>'}
-        <span class="category-pill">${esc(a.category)}</span>
+        <span class="category-pill">${skin ? '🧍 Skin' : esc(a.category)}</span>
       </div>
 
       <div class="card-body">
         <div class="card-title-row">
           <h3>${esc(a.name)}</h3>
-          <span class="version">${esc(a.version || 'Bedrock')}</span>
+          <span class="version">${esc(skin ? skinModel : (a.version || 'Bedrock'))}</span>
         </div>
 
         <p class="card-desc">${esc(a.description || '')}</p>
@@ -712,6 +714,10 @@ function render() {
   else list.sort((a,b) => new Date(b.created_at||0)-new Date(a.created_at||0));
 
   $('#catalogGrid').innerHTML = list.map(card).join('');
+  const skinItems = [...addons].filter(a => a.category === 'Skin').sort((a,b) => new Date(b.created_at||0)-new Date(a.created_at||0));
+  $('#skinGrid').innerHTML = skinItems.slice(0,6).map(card).join('');
+  $('#skinEmpty')?.classList.toggle('hidden', skinItems.length > 0);
+  $('#skins')?.classList.toggle('hidden', activeCategory !== 'All' && activeCategory !== 'Skin' && ( $('#search')?.value || '').trim() === '');
   const countLabel = $('#resultCount');
   if (countLabel) countLabel.textContent = `Menampilkan ${list.length} dari ${addons.length} koleksi`;
   $('#empty').classList.toggle('hidden', list.length > 0);
@@ -791,7 +797,7 @@ async function openDetail(id) {
     </div>
 
     <button class="btn primary download-btn" id="downloadNow">
-      ↓ Download Addon
+      ↓ ${a.category === 'Skin' ? 'Download Skin PNG' : 'Download Addon'}
     </button>
 
     <div class="review-box">
