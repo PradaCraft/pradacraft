@@ -10,6 +10,7 @@ let addons = [];
 let activeCategory = 'All';
 let selectedRating = 5;
 let currentUser = null;
+let currentProfile = null;
 let authMode = "login";
 
 const $ = s => document.querySelector(s);
@@ -149,19 +150,13 @@ function updateOwnerControls() {
     if (el) el.style.display = visible ? '' : 'none';
   });
 
-  const ownerLoginButton = $('#ownerLoginOpen');
-  if (ownerLoginButton) ownerLoginButton.classList.toggle('hidden', visible);
-
-  // Menu samping mengikuti status akun: Owner yang sudah login melihat Panel Owner,
-  // bukan tombol Login Owner lagi.
-  const drawerOwnerButton = $('#drawerOwnerLogin');
-  if (drawerOwnerButton) {
-    drawerOwnerButton.classList.toggle('hidden', false);
-    drawerOwnerButton.innerHTML = visible
-      ? '<span>⚙</span> Panel Owner'
-      : '<span>⚙</span> Login Owner';
-    drawerOwnerButton.setAttribute('aria-label', visible ? 'Buka Panel Owner' : 'Login Owner');
-  }
+  // Login Owner tidak ditampilkan kepada publik. Akses Owner hanya melalui
+  // jalur login khusus dan tetap diverifikasi memakai UID.
+  $('#ownerLoginOpen')?.classList.add('hidden');
+  $('#drawerOwnerLogin')?.classList.add('hidden');
+  $('#adminOpen')?.classList.toggle('hidden', !visible);
+  $('#heroAdmin')?.classList.toggle('hidden', !visible);
+  $('#drawerOwnerPanel')?.classList.toggle('hidden', !visible);
 
   if (!visible) {
     $('#adminModal')?.classList.add('hidden');
@@ -174,6 +169,7 @@ async function refreshUser() {
   if (error) console.error(error);
 
   currentUser = data?.session?.user || null;
+  await ensureCurrentProfile(currentUser);
   updateOwnerControls();
   updateAccountUI();
 
@@ -186,13 +182,126 @@ async function loginGitHub() {
 
 function profileName(user = currentUser) {
   const meta = user?.user_metadata || {};
-  return meta.full_name || meta.name || meta.display_name ||
+  if (user?.id === currentUser?.id && currentProfile?.display_name) return currentProfile.display_name;
+  return meta.display_name || meta.full_name || meta.name ||
     user?.email?.split('@')[0] || 'Pengunjung';
 }
 
 function profileAvatar(user = currentUser) {
   const meta = user?.user_metadata || {};
+  if (user?.id === currentUser?.id && currentProfile?.avatar_url) return currentProfile.avatar_url;
   return meta.avatar_url || meta.picture || meta.photo_url || '';
+}
+
+async function ensureCurrentProfile(user) {
+  if (!user) { currentProfile = null; return null; }
+  const { data: found, error: readError } = await db.from('profiles')
+    .select('id,display_name,avatar_url,updated_at').eq('id', user.id).maybeSingle();
+  if (readError) console.error('Gagal membaca profil:', readError);
+  if (found) { currentProfile = found; return found; }
+
+  const meta = user.user_metadata || {};
+  const initial = {
+    id: user.id,
+    display_name: String(meta.display_name || meta.full_name || meta.name || user.email?.split('@')[0] || 'Pengunjung').slice(0,40),
+    avatar_url: meta.avatar_url || meta.picture || meta.photo_url || null
+  };
+  const { error: insertError } = await db.from('profiles').upsert(initial, { onConflict:'id', ignoreDuplicates:true });
+  if (insertError) console.error('Gagal membuat profil:', insertError);
+  const { data } = await db.from('profiles').select('id,display_name,avatar_url,updated_at').eq('id', user.id).maybeSingle();
+  currentProfile = data || initial;
+  return currentProfile;
+}
+
+function ownerVerifiedMarkup(userId) {
+  return userId === OWNER_UID ? '<span class="verified-badge" title="Owner PradaCraft terverifikasi" aria-label="Owner terverifikasi">✓</span>' : '';
+}
+
+function openAccountModal() {
+  if (!currentUser) return openLoginModal('login');
+  $('#profileModalTitle').textContent = 'Detail Akun';
+  $('#profileDisplayName').value = profileName();
+  $('#profileEmail').textContent = currentUser.email || 'Email tidak tersedia';
+  $('#profileAvatarPreview').innerHTML = avatarMarkup(profileName(), profileAvatar());
+  $('#profileVerified').innerHTML = isOwner() ? '<span class="verified-badge">✓</span> Owner PradaCraft terverifikasi' : 'Akun Pengunjung';
+  $('#profileEditForm').classList.remove('hidden');
+  $('#profileLogout').classList.remove('hidden');
+  $('#profileSave').classList.remove('hidden');
+  $('#profilePhoto').value = '';
+  $('#profileModal').classList.remove('hidden');
+}
+
+async function openPublicProfile(userId, fallbackName, fallbackAvatar) {
+  if (!userId) return;
+  let profile = null;
+  const { data, error } = await db.from('profiles').select('id,display_name,avatar_url').eq('id', userId).maybeSingle();
+  if (error) console.warn('Profil publik tidak tersedia:', error);
+  profile = data || { id:userId, display_name:fallbackName || 'Pengunjung', avatar_url:fallbackAvatar || '' };
+  const name = profile.display_name || fallbackName || 'Pengunjung';
+  $('#profileModalTitle').textContent = 'Profil Pengguna';
+  $('#profileDisplayName').value = name;
+  $('#profileEmail').textContent = userId === currentUser?.id ? (currentUser.email || '') : 'Anggota PradaCraft';
+  $('#profileAvatarPreview').innerHTML = avatarMarkup(name, profile.avatar_url || fallbackAvatar || '');
+  $('#profileVerified').innerHTML = ownerVerifiedMarkup(userId) || 'Pengunjung PradaCraft';
+  $('#profileEditForm').classList.add('hidden');
+  $('#profileLogout').classList.add('hidden');
+  $('#profileSave').classList.add('hidden');
+  $('#profileModal').classList.remove('hidden');
+}
+
+async function saveAccountProfile() {
+  if (!currentUser) return;
+  const button = $('#profileSave');
+  const displayName = $('#profileDisplayName').value.trim();
+  const file = $('#profilePhoto').files?.[0];
+  if (!displayName || displayName.length > 40) {
+    toast('Nama profil harus 1–40 karakter.');
+    return;
+  }
+  if (file && (!['image/png','image/jpeg','image/webp'].includes(file.type) || file.size > 3*1024*1024)) {
+    toast('Foto harus PNG, JPG, atau WebP dan maksimal 3 MB.');
+    return;
+  }
+
+  button.disabled = true;
+  button.textContent = 'Menyimpan...';
+  try {
+    let avatarUrl = profileAvatar();
+    if (file) {
+      const ext = file.type === 'image/png' ? 'png' : file.type === 'image/webp' ? 'webp' : 'jpg';
+      const path = currentUser.id + '/profile-' + Date.now() + '.' + ext;
+      const { error: uploadError } = await db.storage.from('avatars').upload(path, file, {
+        upsert: true, contentType: file.type, cacheControl: '3600'
+      });
+      if (uploadError) throw uploadError;
+      avatarUrl = db.storage.from('avatars').getPublicUrl(path).data.publicUrl;
+    }
+
+    const { data: updatedUser, error: authError } = await db.auth.updateUser({
+      data: { display_name: displayName, full_name: displayName, name: displayName, avatar_url: avatarUrl || null }
+    });
+    if (authError) throw authError;
+
+    const { data: savedProfile, error: profileError } = await db.from('profiles').upsert({
+      id: currentUser.id, display_name: displayName, avatar_url: avatarUrl || null, updated_at: new Date().toISOString()
+    }, { onConflict:'id' }).select().single();
+    if (profileError) throw profileError;
+
+    currentUser = updatedUser.user || currentUser;
+    currentProfile = savedProfile;
+    updateAccountUI();
+    $('#profileAvatarPreview').innerHTML = avatarMarkup(displayName, avatarUrl);
+    $('#profileVerified').innerHTML = isOwner() ? '<span class="verified-badge">✓</span> Owner PradaCraft terverifikasi' : 'Akun Pengunjung';
+    toast('Profil berhasil diperbarui.');
+    const addonId = $('#detailModal')?.dataset.addonId;
+    if (addonId && !$('#detailModal').classList.contains('hidden')) await openDetail(addonId);
+  } catch (error) {
+    console.error('Gagal menyimpan profil:', error);
+    toast('Gagal menyimpan profil: ' + error.message);
+  } finally {
+    button.disabled = false;
+    button.textContent = 'Simpan Perubahan';
+  }
 }
 
 function avatarMarkup(name, url) {
@@ -226,6 +335,14 @@ function updateAccountUI() {
   $('#accountName').textContent = name;
   $('#accountFullName').textContent = name;
   $('#accountEmail').textContent = currentUser.email || '';
+  const drawerAccount = $('#drawerAccount');
+  if (drawerAccount) drawerAccount.classList.toggle('hidden', !loggedIn);
+  const drawerAvatar = $('#drawerAccountAvatar');
+  if (drawerAvatar) drawerAvatar.innerHTML = avatarMarkup(name, avatar);
+  const drawerName = $('#drawerAccountName');
+  if (drawerName) drawerName.textContent = name;
+  const drawerLoginButton = $('#drawerLogin');
+  if (drawerLoginButton) drawerLoginButton.classList.toggle('hidden', loggedIn);
 }
 
 function openLoginModal(mode = 'login') {
@@ -452,9 +569,17 @@ $('#switchAuthMode')?.addEventListener('click', () => {
 });
 
 $('#loginOpen')?.addEventListener('click', () => openLoginModal('login'));
-$('#ownerLoginOpen')?.addEventListener('click', openOwnerLoginModal);
-$('#accountTrigger')?.addEventListener('click', () => {
-  $('#accountDropdown').classList.toggle('hidden');
+// Login Owner sengaja tidak memiliki tombol publik; gunakan URL khusus ?admin=login.
+$('#accountTrigger')?.addEventListener('click', openAccountModal);
+$('#drawerAccountTrigger')?.addEventListener('click', () => { setDrawer(false); openAccountModal(); });
+$('#profileEditForm')?.addEventListener('submit', async e => { e.preventDefault(); await saveAccountProfile(); });
+$('#profileLogout')?.addEventListener('click', async () => {
+  const { error } = await db.auth.signOut();
+  if (error) { toast('Logout gagal: ' + error.message); return; }
+  currentUser = null; currentProfile = null;
+  updateAccountUI(); updateOwnerControls();
+  $('#profileModal').classList.add('hidden');
+  toast('Berhasil logout.');
 });
 $('#accountLogout')?.addEventListener('click', async () => {
   const { error } = await db.auth.signOut();
@@ -505,10 +630,10 @@ async function signedImageUrl(path) {
 }
 
 function reviewIdentity(review) {
-  const owner = review.user_id === OWNER_UID;
   const name = review.name || 'Pengunjung';
   const avatar = review.avatar_url || '';
-  return `<div class="review-author">${avatarMarkup(name, avatar)}<span>${esc(name)}</span>${owner ? '<span class="verified-badge" title="Owner terverifikasi">✓</span>' : ''}</div>`;
+  const verified = ownerVerifiedMarkup(review.user_id);
+  return `<button type="button" class="review-author profile-open" data-profile-id="${esc(review.user_id || '')}" data-profile-name="${esc(name)}" data-profile-avatar="${esc(avatar)}">${avatarMarkup(name, avatar)}<span>${esc(name)}</span>${verified}</button>`;
 }
 
 async function loadAddons() {
@@ -698,6 +823,7 @@ async function openDetail(id) {
     </div>
   `;
 
+  $('#detailModal').dataset.addonId = id;
   $('#detailModal').classList.remove('hidden');
 
   $('#downloadNow').onclick = () => downloadAddon(a);
@@ -1327,14 +1453,11 @@ $('#drawerClose')?.addEventListener('click', () => setDrawer(false));
 $('#drawerBackdrop')?.addEventListener('click', () => setDrawer(false));
 $('#sideDrawer')?.querySelectorAll('a[href^="#"]').forEach(link => link.addEventListener('click', () => setDrawer(false)));
 $('#drawerLogin')?.addEventListener('click', () => { setDrawer(false); openLoginModal('login'); });
-$('#drawerOwnerLogin')?.addEventListener('click', () => {
+$('#drawerOwnerPanel')?.addEventListener('click', () => {
   setDrawer(false);
-  if (isOwner()) {
-    $('#adminModal').classList.remove('hidden');
-    renderAdmin();
-  } else {
-    openOwnerLoginModal();
-  }
+  if (!isOwner()) return;
+  $('#adminModal').classList.remove('hidden');
+  renderAdmin();
 });
 $('#drawerYear') && ($('#drawerYear').textContent = new Date().getFullYear());
 document.addEventListener('keydown', e => { if (e.key === 'Escape') setDrawer(false); });
@@ -1353,6 +1476,11 @@ document.addEventListener('click', function(e) {
     : e.target.parentElement;
 
   if (!target) return;
+  const profileButton = target.closest('.profile-open');
+  if (profileButton) {
+    openPublicProfile(profileButton.dataset.profileId, profileButton.dataset.profileName, profileButton.dataset.profileAvatar);
+    return;
+  }
 
   // EDIT, FOTO, HAPUS FOTO
   const adminAction = target.closest('[data-admin-action]');
@@ -1510,8 +1638,12 @@ $('#addonForm').addEventListener('submit', async e => {
 
 db.auth.onAuthStateChange((event, session) => {
   currentUser = session?.user || null;
+  currentProfile = null;
   updateOwnerControls();
   updateAccountUI();
+  if (currentUser) {
+    ensureCurrentProfile(currentUser).then(() => { updateAccountUI(); });
+  }
 
   if (event === 'PASSWORD_RECOVERY') {
     $('#loginModal').classList.add('hidden');
