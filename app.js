@@ -1350,6 +1350,20 @@ document.addEventListener('click', function(e) {
         : 'adminModal';
 
     $('#' + modalId)?.classList.add('hidden');
+
+    // Kosongkan data login setiap kali jendela login ditutup.
+    if (close === 'login') {
+      $('#emailAuthForm')?.reset();
+      $('#authEmail').value = '';
+      $('#authPassword').value = '';
+      $('#authName').value = '';
+      const submit = $('#emailAuthSubmit');
+      if (submit) {
+        submit.disabled = false;
+        submit.textContent = authMode === 'signup' ? 'Daftar Akun' :
+          authMode === 'owner' ? 'Masuk sebagai Owner' : 'Login';
+      }
+    }
   }
 });
 
