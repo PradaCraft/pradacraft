@@ -2038,3 +2038,16 @@ body.drawer-open .drawer-backdrop{opacity:1;visibility:visible}body.drawer-open 
 
 /* Hide legacy dropdown menu on mobile; use the side drawer only */
 @media (max-width:650px){.topbar nav,.topbar nav.open{display:none!important;visibility:hidden!important;pointer-events:none!important}}
+
+/* PradaCraft account profile modal */
+.profile-dialog{width:min(460px,100%)}
+.profile-summary{display:flex;align-items:center;gap:14px;margin:20px 0;padding:15px;border:1px solid #304532;border-radius:14px;background:#111a13}
+.profile-avatar-large{display:grid;place-items:center;width:76px;height:76px;flex:0 0 76px;border:2px solid #70c94a;border-radius:50%;overflow:hidden;background:#1c3020}
+.profile-avatar-large .profile-avatar,.profile-avatar-large .avatar-fallback{width:72px;height:72px;flex-basis:72px;font-size:25px}
+.profile-summary strong{display:flex;align-items:center;gap:7px;color:#e9f4e6}
+.profile-logout{width:100%;margin-top:12px;padding:12px;border:1px solid #754343;border-radius:10px;background:#281515;color:#ffb4b4;font-weight:800;cursor:pointer}
+.review-author.profile-open{display:inline-flex;align-items:center;gap:8px;padding:0;border:0;background:transparent;color:inherit;text-align:left;font:inherit;cursor:pointer}
+.review-author.profile-open:hover>span:not(.verified-badge){color:var(--green)}
+.drawer-account-avatar .profile-avatar,.drawer-account-avatar .avatar-fallback{width:38px;height:38px;flex-basis:38px}
+#drawerAccount{display:flex;align-items:center}
+#drawerAccountName{display:inline!important;width:auto!important;color:#b9f4c1!important;font-size:15px!important}
