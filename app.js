@@ -784,7 +784,7 @@ async function openDetail(id) {
     </div>
 
     <button class="btn primary download-btn" id="downloadNow">
-      \${/^https?:\/\//i.test(a.file_path || '') ? '↗ Buka Halaman Download' : '↓ Download Addon'}
+      ↓ Download Addon
     </button>
 
     <div class="review-box">
@@ -925,8 +925,17 @@ async function downloadAddon(a) {
 
   try {
     if (externalUrl) {
-      if (externalWindow && !externalWindow.closed) externalWindow.location.href = externalUrl;
-      else window.location.href = externalUrl;
+      const { error: countError } = await db
+        .from('addon_download_events')
+        .insert({ addon_id: a.id, user_id: currentUser.id });
+      if (countError && countError.code !== '23505') {
+        console.error('Download count error:', countError);
+      }
+      if (externalWindow && !externalWindow.closed) {
+        externalWindow.location.href = externalUrl;
+      } else {
+        window.location.href = externalUrl;
+      }
       return;
     }
 
