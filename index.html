@@ -56,6 +56,19 @@
     <p class="auth-switch" id="authSwitchText">Belum punya akun? <button type="button" id="switchAuthMode">Daftar</button></p>
   </article>
 </div>
+<div class="modal hidden" id="passwordRecoveryModal">
+  <div class="modal-backdrop"></div>
+  <article class="dialog login-dialog">
+    <div class="eyebrow">PRADACRAFT ACCOUNT</div>
+    <h2>Password <span class="green">Baru</span></h2>
+    <p class="muted">Buat password baru untuk akun PradaCraft kamu.</p>
+    <form id="passwordRecoveryForm" class="auth-form">
+      <label>Password baru<input id="newRecoveryPassword" type="password" autocomplete="new-password" minlength="8" placeholder="Minimal 8 karakter" required></label>
+      <label>Ulangi password baru<input id="confirmRecoveryPassword" type="password" autocomplete="new-password" minlength="8" placeholder="Ketik ulang password baru" required></label>
+      <button class="btn primary full" id="saveRecoveryPassword" type="submit">Simpan Password Baru</button>
+    </form>
+  </article>
+</div>
 <div class="modal hidden" id="detailModal"><div class="modal-backdrop" data-close="detail"></div><article class="dialog detail-dialog"><button class="close" data-close="detail">×</button><div id="detailContent"></div></article></div>
 <div class="modal hidden" id="adminModal"><div class="modal-backdrop" data-close="admin"></div><article class="dialog admin-dialog"><button class="close" data-close="admin">×</button><div class="eyebrow">CREATOR DASHBOARD</div><h2>Admin <span class="green">Panel</span></h2><p class="muted">Kelola addon yang tampil di website ini.</p>
 <form id="addonForm">
