@@ -380,12 +380,15 @@ async function loadAddons() {
     return;
   }
 
-  addons = data || [];
+  addons = await Promise.all((data || []).map(async addon => ({
+    ...addon,
+    image_url: await signedImageUrl(addon.image_path)
+  })));
   render();
 }
 
 function card(a) {
-  const image = imageUrl(a.image_path);
+  const image = a.image_url || '';
 
   return `
     <article class="addon-card" data-id="${esc(a.id)}">
@@ -466,7 +469,7 @@ async function openDetail(id) {
 
   const avg = Number(a.rating || 0);
   const ratingCount = Number(a.votes || comments.length || 0);
-  const image = imageUrl(a.image_path);
+  const image = a.image_url || '';
 
   $('#detailContent').innerHTML = `
     ${image
