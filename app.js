@@ -629,7 +629,8 @@ function reviewIdentity(review) {
   const name = review.name || 'Pengunjung';
   const avatar = review.avatar_url || '';
   const verified = ownerVerifiedMarkup(review.user_id);
-  return `<button type="button" class="review-author profile-open" data-profile-id="${esc(review.user_id || '')}" data-profile-name="${esc(name)}" data-profile-avatar="${esc(avatar)}">${avatarMarkup(name, avatar)}<span>${esc(name)}</span>${verified}</button>`;
+  const ownerClass = review.user_id === OWNER_UID ? "owner-name" : "visitor-name";
+  return `<button type="button" class="review-author profile-open" data-profile-id="${esc(review.user_id || '')}" data-profile-name="${esc(name)}" data-profile-avatar="${esc(avatar)}">${avatarMarkup(name, avatar)}<span class="${ownerClass}">${esc(name)}</span>${verified}</button>`;
 }
 
 async function loadAddons() {
