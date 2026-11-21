@@ -1622,6 +1622,24 @@ document.addEventListener('click', function(e) {
   }
 });
 
+// Form upload menyesuaikan format konten.
+function updateUploadType() {
+  const skin = $('#addonForm [name="category"]')?.value === 'Skin';
+  const file = $('#uploadFile');
+  const label = $('#uploadFileLabel');
+  const model = $('#skinModelWrap');
+  const hint = $('#uploadHint');
+  if (!file || !label) return;
+  file.accept = skin ? '.png' : '.mcaddon,.mcpack,.zip,.mcworld,.mctemplate';
+  label.firstChild.textContent = skin ? 'File skin Minecraft (.png)' : 'File addon (.mcaddon / .mcpack / .zip)';
+  if (model) model.classList.toggle('hidden', !skin);
+  if (hint) hint.textContent = skin
+    ? 'Skin PNG akan ditampilkan sebagai preview dan bisa diunduh. Pilih model Classic (Steve) atau Slim (Alex).'
+    : 'Untuk skin, pilih kategori Skin lalu unggah file PNG skin Minecraft.';
+}
+$('#addonForm [name="category"]')?.addEventListener('change', updateUploadType);
+updateUploadType();
+
 // PENCARIAN ADMIN
 $('#adminSearch')?.addEventListener('input', renderAdmin);
 
@@ -1649,10 +1667,15 @@ $('#addonForm').addEventListener('submit', async e => {
     return;
   }
 
-  const allowed = /\.(mcaddon|mcpack|mcworld|mctemplate|zip)$/i;
+  const isSkin = fd.get('category') === 'Skin';
+  const allowed = isSkin ? /\.png$/i : /\.(mcaddon|mcpack|mcworld|mctemplate|zip)$/i;
 
   if (!allowed.test(file.name)) {
-    toast('Format file addon tidak didukung.');
+    toast(isSkin ? 'File skin harus berformat PNG.' : 'Format file addon tidak didukung.');
+    return;
+  }
+  if (isSkin && file.size > 2 * 1024 * 1024) {
+    toast('Ukuran file skin maksimal 2 MB.');
     return;
   }
 
@@ -1669,10 +1692,14 @@ $('#addonForm').addEventListener('submit', async e => {
       await uploadFile(pic, imagePath);
     }
 
+    if (isSkin && !imagePath) imagePath = filePath;
+    const savedVersion = isSkin
+      ? `Bedrock 1.21+ • Model: ${$('#skinModel')?.value || 'Classic (Steve)'}`
+      : fd.get('version');
     const { error } = await db.from('addons').insert({
       name: fd.get('name'),
       category: fd.get('category'),
-      version: fd.get('version'),
+      version: savedVersion,
       description: fd.get('description'),
       file_path: filePath,
       image_path: imagePath,
