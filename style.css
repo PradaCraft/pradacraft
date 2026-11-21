@@ -2059,3 +2059,13 @@ body.drawer-open .drawer-backdrop{opacity:1;visibility:visible}body.drawer-open 
 /* Identitas komentar: Owner hijau, pengunjung putih */
 .review-author .owner-name{color:#55d66a!important;font-weight:900}
 .review-author .visitor-name{color:#fff!important;font-weight:800}
+
+
+/* Identitas Owner konsisten di profil dan menu samping */
+.profile-identity{display:flex;flex-direction:column;align-items:flex-start;gap:5px;min-width:0}
+#profileIdentityName{display:inline-flex;align-items:center;gap:7px;font-size:17px;font-weight:900;overflow-wrap:anywhere}
+#profileVerified{color:#91a194;font-size:12px;font-weight:700}
+#profileIdentityName .owner-name,#drawerAccountName .owner-name{color:#55d66a!important;font-weight:900}
+#profileIdentityName .visitor-name,#drawerAccountName .visitor-name{color:#fff!important;font-weight:800}
+#drawerAccountName{display:inline-flex!important;align-items:center;gap:7px;width:auto!important;color:inherit!important;font-size:15px!important}
+#drawerAccountName .verified-badge{width:17px;height:17px;flex:0 0 17px}
