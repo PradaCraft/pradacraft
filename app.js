@@ -170,14 +170,7 @@ async function refreshUser() {
 }
 
 async function loginGitHub() {
-  const { error } = await db.auth.signInWithOAuth({
-    provider: 'github',
-    options: {
-      redirectTo: 'https://pradacraft.github.io/pradacraft/owner.html'
-    }
-  });
-
-  if (error) toast('Login Owner gagal: ' + error.message);
+  await loginProvider('github', true);
 }
 
 function profileName(user = currentUser) {
@@ -1521,7 +1514,7 @@ async function start() {
 
   // OAuth GitHub untuk Owner hanya diterima jika kembali sebagai UID Owner yang sah.
   if (localStorage.getItem('pradacraft_owner_oauth_login') === '1') {
-    localStorage.removeItem('pradacraft_owner_github_login');
+    localStorage.removeItem('pradacraft_owner_oauth_login');
 
     if (isOwner()) {
       $('#adminModal').classList.remove('hidden');
