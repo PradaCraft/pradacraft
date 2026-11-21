@@ -170,7 +170,7 @@ async function loginGitHub() {
   const { error } = await db.auth.signInWithOAuth({
     provider: 'github',
     options: {
-      redirectTo: 'https://pradacraft.github.io/pradacraft/owner.html'
+      redirectTo: 'https://pradanamohfahri34-cmyk.github.io/pradacraft/owner.html'
     }
   });
 
