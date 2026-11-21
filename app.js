@@ -626,6 +626,14 @@ async function openDetail(id) {
 // ======================================
 
 async function downloadAddon(a) {
+  await refreshUser();
+
+  if (!currentUser) {
+    toast('Login terlebih dahulu untuk mengunduh addon.');
+    openLoginModal('login');
+    return;
+  }
+
   if (!a.file_path) {
     toast('File addon tidak ditemukan.');
     return;
@@ -667,19 +675,12 @@ async function downloadAddon(a) {
     link.click();
     link.remove();
 
-    // Hitung satu kali per addon pada browser ini.
-    if (!localStorage.getItem(countKey)) {
-      const { error: countError } = await db.rpc(
-        'increment_addon_download',
-        { addon_id_input: a.id }
-      );
-
-      if (countError) {
-        console.error('Download count error:', countError);
-      } else {
-        localStorage.setItem(countKey, '1');
-      }
-    }
+    // Database membatasi hitungan maksimal satu kali per akun per addon per hari.
+    const { error: countError } = await db.rpc(
+      'increment_addon_download',
+      { addon_id_input: a.id }
+    );
+    if (countError) console.error('Download count error:', countError);
 
     toast('Download dimulai!');
 
