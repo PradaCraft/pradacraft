@@ -640,7 +640,6 @@ async function downloadAddon(a) {
   }
 
   const fileName = a.file_name || 'addon.mcaddon';
-  const countKey = `pradacraft_download_${a.id}`;
 
   try {
     toast('Menyiapkan download...');
