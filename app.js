@@ -407,20 +407,43 @@ function openOwnerLoginModal() {
 }
 
 async function loginProvider(provider, ownerMode = false) {
+  const button = document.getElementById(provider + 'Login');
+  const label = button?.querySelector('span');
+  const originalLabel = label?.textContent || provider;
+  if (button) {
+    button.disabled = true;
+    button.setAttribute('aria-busy', 'true');
+    if (label) label.textContent = 'Menghubungkan...';
+  }
+
   if (ownerMode) {
     localStorage.setItem('pradacraft_owner_oauth_login', '1');
   }
 
-  const { error } = await db.auth.signInWithOAuth({
-    provider,
-    options: {
-      redirectTo: 'https://pradacraft.github.io/pradacraft/'
-    }
-  });
+  try {
+    const redirectTo = window.location.origin + window.location.pathname;
+    const { error } = await db.auth.signInWithOAuth({
+      provider,
+      options: { redirectTo }
+    });
 
-  if (error) {
+    if (error) throw error;
+  } catch (error) {
     if (ownerMode) localStorage.removeItem('pradacraft_owner_oauth_login');
-    toast('Login ' + provider + ' gagal: ' + error.message);
+    console.error('OAuth login error (' + provider + '):', error);
+    const message = String(error?.message || 'Terjadi kesalahan.');
+    if (/provider.*not enabled|unsupported provider|provider_disabled/i.test(message + ' ' + (error?.code || ''))) {
+      toast('Login ' + provider + ' belum diaktifkan di Supabase Auth. Periksa pengaturan Providers.');
+    } else if (/redirect.*(url|uri)|not allowed/i.test(message)) {
+      toast('Alamat kembali login belum diizinkan di Supabase URL Configuration.');
+    } else {
+      toast('Login ' + provider + ' gagal: ' + message);
+    }
+    if (button) {
+      button.disabled = false;
+      button.removeAttribute('aria-busy');
+      if (label) label.textContent = originalLabel;
+    }
   }
 }
 
