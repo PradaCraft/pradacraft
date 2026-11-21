@@ -234,6 +234,9 @@ function openLoginModal(mode = 'login') {
   $('#authSwitchText').innerHTML = signup
     ? 'Sudah punya akun? <button type="button" id="switchAuthMode">Login</button>'
     : 'Belum punya akun? <button type="button" id="switchAuthMode">Daftar</button>';
+  $('#switchAuthMode').onclick = () => {
+    openLoginModal(authMode === 'login' ? 'signup' : 'login');
+  };
   $('#loginModal').classList.remove('hidden');
 }
 
@@ -1209,7 +1212,9 @@ document.addEventListener('click', function(e) {
   if (close) {
     const modalId = close === 'detail'
       ? 'detailModal'
-      : 'adminModal';
+      : close === 'login'
+        ? 'loginModal'
+        : 'adminModal';
 
     $('#' + modalId)?.classList.add('hidden');
   }
