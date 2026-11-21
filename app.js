@@ -905,12 +905,9 @@ async function openDetail(id) {
 // ======================================
 
 async function downloadAddon(a) {
-  const externalUrl = /^https?:\/\//i.test(a.file_path || '') ? a.file_path : '';
-  const externalWindow = externalUrl ? window.open('about:blank', '_blank') : null;
   await refreshUser();
 
   if (!currentUser) {
-    if (externalWindow && !externalWindow.closed) externalWindow.close();
     toast('Login terlebih dahulu untuk mengunduh addon.');
     openLoginModal('login');
     return;
@@ -924,18 +921,57 @@ async function downloadAddon(a) {
   const fileName = a.file_name || 'addon.mcaddon';
 
   try {
-    if (externalUrl) {
+    const curseforgeMatch = String(a.file_path || '').match(/^curseforge:\/\/(\d+)\/(\d+)$/);
+    if (curseforgeMatch) {
+      toast('Mengunduh file addon asli...');
+      const { data: sessionData, error: sessionError } = await db.auth.getSession();
+      if (sessionError || !sessionData?.session?.access_token) {
+        throw new Error('Sesi login berakhir. Silakan login kembali.');
+      }
+
+      const response = await fetch(`${SUPABASE_URL}/functions/v1/curseforge-download`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'apikey': SUPABASE_KEY,
+          'Authorization': `Bearer ${sessionData.session.access_token}`
+        },
+        body: JSON.stringify({
+          modId: Number(curseforgeMatch[1]),
+          fileId: Number(curseforgeMatch[2])
+        })
+      });
+
+      if (!response.ok) {
+        let message = 'File gagal diunduh.';
+        try {
+          const detail = await response.json();
+          if (detail?.error) message = detail.error;
+        } catch (_) {}
+        throw new Error(message);
+      }
+
+      const blob = await response.blob();
+      if (!blob.size) throw new Error('File addon kosong atau tidak tersedia.');
+
+      const objectUrl = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = objectUrl;
+      link.download = fileName;
+      link.style.display = 'none';
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      setTimeout(() => URL.revokeObjectURL(objectUrl), 60000);
+
       const { error: countError } = await db
         .from('addon_download_events')
         .insert({ addon_id: a.id, user_id: currentUser.id });
       if (countError && countError.code !== '23505') {
         console.error('Download count error:', countError);
       }
-      if (externalWindow && !externalWindow.closed) {
-        externalWindow.location.href = externalUrl;
-      } else {
-        window.location.href = externalUrl;
-      }
+      toast('Download dimulai: ' + fileName);
+      await loadAddons();
       return;
     }
 
