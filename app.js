@@ -784,7 +784,7 @@ async function openDetail(id) {
     </div>
 
     <button class="btn primary download-btn" id="downloadNow">
-      ↓ Download Addon
+      \${/^https?:\/\//i.test(a.file_path || '') ? '↗ Buka Halaman Download' : '↓ Download Addon'}
     </button>
 
     <div class="review-box">
@@ -905,9 +905,12 @@ async function openDetail(id) {
 // ======================================
 
 async function downloadAddon(a) {
+  const externalUrl = /^https?:\/\//i.test(a.file_path || '') ? a.file_path : '';
+  const externalWindow = externalUrl ? window.open('about:blank', '_blank') : null;
   await refreshUser();
 
   if (!currentUser) {
+    if (externalWindow && !externalWindow.closed) externalWindow.close();
     toast('Login terlebih dahulu untuk mengunduh addon.');
     openLoginModal('login');
     return;
@@ -921,9 +924,9 @@ async function downloadAddon(a) {
   const fileName = a.file_name || 'addon.mcaddon';
 
   try {
-    if (/^https?:\/\//i.test(a.file_path)) {
-      window.open(a.file_path, '_blank', 'noopener,noreferrer');
-      toast('Halaman resmi pembuat addon dibuka. Ikuti tombol Download di sana.');
+    if (externalUrl) {
+      if (externalWindow && !externalWindow.closed) externalWindow.location.href = externalUrl;
+      else window.location.href = externalUrl;
       return;
     }
 
