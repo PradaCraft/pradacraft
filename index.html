@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <meta name="theme-color" content="#101510"><title>PradaCraft — Minecraft Bedrock Addons</title>
-<link rel="stylesheet" href="style.css?v=pradacraft-home-refresh-1">
+<link rel="stylesheet" href="style.css?v=pradacraft-catalog-tools-2">
 </head>
 <body>
 <header class="topbar">
@@ -60,6 +60,22 @@
  <div class="section-head"><div><div class="eyebrow">JELAJAHI KOLEKSI</div><h2>Temukan <span class="green">Favoritmu</span></h2><p class="muted">Gunakan kategori dan urutan untuk menemukan konten lebih cepat.</p></div>
  <label class="sort-wrap"><span>Urutkan</span><select id="sortBy"><option value="newest">Terbaru</option><option value="popular">Paling banyak diunduh</option><option value="rating">Rating tertinggi</option><option value="name">Nama A–Z</option></select></label></div>
  <div class="filters" id="filters"><button class="filter active" data-cat="All">Semua</button><button class="filter" data-cat="Addon">Addons</button><button class="filter" data-cat="Texture">Textures</button><button class="filter" data-cat="Map">Maps</button><button class="filter" data-cat="Shader">Shaders</button><button class="filter" data-cat="Other">Lainnya</button></div>
+ <div class="catalog-tools">
+  <p class="result-count" id="resultCount">Memuat koleksi...</p>
+  <div class="catalog-tool-controls">
+   <label class="version-filter">Versi game
+    <select id="versionFilter">
+     <option value="all">Semua versi</option>
+     <option value="26">Bedrock 26.x</option>
+     <option value="121">Bedrock 1.21</option>
+     <option value="120">Bedrock 1.20</option>
+     <option value="119">Bedrock 1.19</option>
+     <option value="unknown">Versi tidak dicantumkan</option>
+    </select>
+   </label>
+   <button class="clear-filters" id="clearFilters" type="button">Reset filter ↺</button>
+  </div>
+ </div>
  <div class="catalog-grid" id="catalogGrid"></div>
  <div class="empty hidden" id="empty">Belum ada konten yang cocok. Coba kata kunci atau kategori lain.</div>
 </section>
