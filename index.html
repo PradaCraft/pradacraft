@@ -42,7 +42,7 @@
   <div class="eyebrow"><i></i> PRADACRAFT • BEDROCK COMMUNITY</div>
   <h1>Temukan dunia<br><span>baru untuk Minecraft.</span></h1>
   <p>Jelajahi addon, texture pack, map, dan shader untuk Minecraft Bedrock. Cari yang kamu butuhkan, cek detail dan versi, lalu unduh dari sumbernya.</p>
-  <div class="hero-search"><span>⌕</span><input id="search" type="search" placeholder="Cari addon, texture, map..." autocomplete="off"><a href="#catalog">Cari</a></div>
+  <div class="hero-search"><span>⌕</span><input id="search" type="search" placeholder="Cari addon, texture, map, skin..." autocomplete="off"><a href="#catalog">Cari</a></div>
   <div class="hero-actions"><a class="btn primary" href="#catalog">Jelajahi Katalog <b>→</b></a><button class="btn ghost" id="heroAdmin">Upload Addon +</button></div>
   <div class="hero-stats"><div><b id="totalAddons">0</b><small>KOLEKSI</small></div><div><b id="totalDownloads">0</b><small>DOWNLOAD</small></div><div><b>BEDROCK</b><small>EDITION</small></div></div>
  </div>
@@ -59,7 +59,7 @@
 <section class="section catalog-section" id="catalog">
  <div class="section-head"><div><div class="eyebrow">JELAJAHI KOLEKSI</div><h2>Temukan <span class="green">Favoritmu</span></h2><p class="muted">Gunakan kategori dan urutan untuk menemukan konten lebih cepat.</p></div>
  <label class="sort-wrap"><span>Urutkan</span><select id="sortBy"><option value="newest">Terbaru</option><option value="popular">Paling banyak diunduh</option><option value="rating">Rating tertinggi</option><option value="name">Nama A–Z</option></select></label></div>
- <div class="filters" id="filters"><button class="filter active" data-cat="All">Semua</button><button class="filter" data-cat="Addon">Addons</button><button class="filter" data-cat="Texture">Textures</button><button class="filter" data-cat="Map">Maps</button><button class="filter" data-cat="Shader">Shaders</button><button class="filter" data-cat="Other">Lainnya</button></div>
+ <div class="filters" id="filters"><button class="filter active" data-cat="All">Semua</button><button class="filter" data-cat="Addon">Addons</button><button class="filter" data-cat="Texture">Textures</button><button class="filter" data-cat="Map">Maps</button><button class="filter" data-cat="Shader">Shaders</button><button class="filter" data-cat="Skin">Skin</button><button class="filter" data-cat="Other">Lainnya</button></div>
  <div class="catalog-tools">
   <p class="result-count" id="resultCount">Memuat koleksi...</p>
   <div class="catalog-tool-controls">
@@ -134,10 +134,10 @@
 <div class="modal hidden" id="adminModal"><div class="modal-backdrop" data-close="admin"></div><article class="dialog admin-dialog"><button class="close" data-close="admin">×</button><div class="eyebrow">CREATOR DASHBOARD</div><h2>Admin <span class="green">Panel</span></h2><p class="muted">Kelola addon yang tampil di website ini.</p>
 <form id="addonForm">
  <label>Nama addon<input name="name" required maxlength="60" placeholder="Contoh: Fantasy Furniture"></label>
- <div class="form-row"><label>Kategori<select name="category"><option>Addon</option><option>Texture</option><option>Map</option><option>Shader</option><option>Other</option></select></label><label>Versi Minecraft<input name="version" placeholder="1.21+" value="1.21+"></label></div>
+ <div class="form-row"><label>Kategori<select name="category"><option>Addon</option><option>Texture</option><option>Map</option><option>Shader</option><option>Skin</option><option>Other</option></select></label><label>Versi / Model<input name="version" id="uploadVersion" placeholder="1.21+ atau Model: Classic (Steve)" value="1.21+"></label></div><label id="skinModelWrap" class="hidden">Model skin<select id="skinModel"><option value="Classic (Steve)">Classic (Steve)</option><option value="Slim (Alex)">Slim (Alex)</option></select></label>
  <label>Deskripsi<textarea name="description" required rows="3" placeholder="Jelaskan isi addon..."></textarea></label>
  <label>Gambar cover<input name="image" type="file" accept="image/*"></label>
- <label>File addon (.mcaddon / .mcpack / .zip)<input name="file" type="file" accept=".mcaddon,.mcpack,.zip,.mcworld,.mctemplate" required></label>
+ <label id="uploadFileLabel">File addon (.mcaddon / .mcpack / .zip)<input name="file" id="uploadFile" type="file" accept=".mcaddon,.mcpack,.zip,.mcworld,.mctemplate" required></label><p class="upload-hint" id="uploadHint">Untuk skin, pilih kategori Skin lalu unggah file PNG skin Minecraft.</p>
  <button class="btn primary full" type="submit">Publish Addon ↗</button>
 </form><div class="admin-note">Catatan: versi demo ini menyimpan data di browser/perangkat ini. Untuk website publik multi-pengguna, perlu hosting dan database/backend.</div>
 <div class="admin-list">
@@ -176,5 +176,5 @@
 </div>
 <div class="toast" id="toast"></div>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<script src="app.js?v=pradacraft-catalog-filter-20261122"></script>
+<script src="app.js?v=pradacraft-skins-glass-20261122"></script>
 </body></html>
