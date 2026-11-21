@@ -922,8 +922,7 @@ async function downloadAddon(a) {
 
   try {
     if (/^https?:\/\//i.test(a.file_path)) {
-      const opened = window.open(a.file_path, '_blank', 'noopener,noreferrer');
-      if (!opened) window.location.href = a.file_path;
+      window.open(a.file_path, '_blank', 'noopener,noreferrer');
       toast('Halaman resmi pembuat addon dibuka. Ikuti tombol Download di sana.');
       return;
     }
