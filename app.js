@@ -714,10 +714,12 @@ function render() {
   else list.sort((a,b) => new Date(b.created_at||0)-new Date(a.created_at||0));
 
   $('#catalogGrid').innerHTML = list.map(card).join('');
-  const skinItems = [...addons].filter(a => a.category === 'Skin').sort((a,b) => new Date(b.created_at||0)-new Date(a.created_at||0));
+  const skinItems = [...addons]
+    .filter(a => a.category === 'Skin' && (!q || `${a.name} ${a.description} ${a.version || ''}`.toLowerCase().includes(q)))
+    .sort((a,b) => new Date(b.created_at||0)-new Date(a.created_at||0));
   $('#skinGrid').innerHTML = skinItems.slice(0,6).map(card).join('');
-  $('#skinEmpty')?.classList.toggle('hidden', skinItems.length > 0);
-  $('#skins')?.classList.toggle('hidden', activeCategory !== 'All' && activeCategory !== 'Skin' && ( $('#search')?.value || '').trim() === '');
+  $('#skinEmpty')?.classList.toggle('hidden', skinItems.length > 0 || Boolean(q));
+  $('#skins')?.classList.toggle('hidden', activeCategory !== 'All' && activeCategory !== 'Skin');
   const countLabel = $('#resultCount');
   if (countLabel) countLabel.textContent = `Menampilkan ${list.length} dari ${addons.length} koleksi`;
   $('#empty').classList.toggle('hidden', list.length > 0);
