@@ -339,8 +339,6 @@ function updateAccountUI() {
   if (drawerAvatar) drawerAvatar.innerHTML = avatarMarkup(name, avatar);
   const drawerName = $('#drawerAccountName');
   if (drawerName) drawerName.textContent = name;
-  const drawerLoginButton = $('#drawerLogin');
-  if (drawerLoginButton) drawerLoginButton.classList.toggle('hidden', loggedIn);
 }
 
 function openLoginModal(mode = 'login') {
