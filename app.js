@@ -350,10 +350,15 @@ async function showAdmin() {
 // ADDON DATABASE
 // ======================================
 
-function imageUrl(path) {
+async function signedImageUrl(path) {
   if (!path) return '';
 
-  return db.storage.from(BUCKET).getPublicUrl(path).data.publicUrl;
+  const { data, error } = await db.storage.from(BUCKET).createSignedUrl(path, 3600);
+  if (error) {
+    console.warn('Gagal membuat URL gambar:', error.message);
+    return '';
+  }
+  return data?.signedUrl || '';
 }
 
 function reviewIdentity(review) {
