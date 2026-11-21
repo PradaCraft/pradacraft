@@ -620,6 +620,7 @@ async function showAdmin() {
 
 async function signedImageUrl(path) {
   if (!path) return '';
+  if (/^https?:\/\//i.test(path)) return path;
 
   const { data, error } = await db.storage.from(BUCKET).createSignedUrl(path, 3600);
   if (error) {
@@ -920,6 +921,13 @@ async function downloadAddon(a) {
   const fileName = a.file_name || 'addon.mcaddon';
 
   try {
+    if (/^https?:\/\//i.test(a.file_path)) {
+      const opened = window.open(a.file_path, '_blank', 'noopener,noreferrer');
+      if (!opened) window.location.href = a.file_path;
+      toast('Halaman resmi pembuat addon dibuka. Ikuti tombol Download di sana.');
+      return;
+    }
+
     toast('Menyiapkan download...');
 
     const { data, error } = await db.storage
