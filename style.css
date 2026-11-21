@@ -2020,3 +2020,7 @@ body {
   .auth-providers { grid-template-columns: 1fr; }
   .auth-provider-btn { justify-content: flex-start; padding-inline: 18px; }
 }
+
+/* PradaCraft brand image */
+.brand-mark { display:block; object-fit:cover; flex:0 0 42px; border:1px solid rgba(163,255,75,.45); }
+@media (max-width:650px) { .brand-mark { flex-basis:36px; } }
