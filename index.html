@@ -42,8 +42,8 @@
     <h2 id="loginTitle">Login <span class="green">Pengunjung</span></h2>
     <p class="muted" id="loginDescription">Masuk untuk memberi rating dan komentar dengan profilmu.</p>
     <form id="emailAuthForm" class="auth-form">
-      <label>Alamat email<input id="authEmail" type="email" autocomplete="email" placeholder="nama@gmail.com" required></label>
-      <label>Kata sandi<input id="authPassword" type="password" autocomplete="current-password" minlength="6" placeholder="Minimal 6 karakter" required></label>
+      <label>Alamat email<input id="authEmail" type="email" autocomplete="off" placeholder="nama@gmail.com" required></label>
+      <label>Kata sandi<input id="authPassword" type="password" autocomplete="new-password" minlength="6" placeholder="Minimal 6 karakter" required></label>
       <label id="authNameWrap" class="hidden">Nama tampilan<input id="authName" type="text" maxlength="40" autocomplete="name" placeholder="Nama yang tampil di komentar"></label>
       <button class="btn primary full" id="emailAuthSubmit" type="submit">Login</button>
     </form>
@@ -97,5 +97,5 @@
 </article></div>
 <div class="toast" id="toast"></div>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<script src="app.js?v=login-clear-1"></script>
+<script src="app.js?v=login-clear-2"></script>
 </body></html>
