@@ -149,6 +149,9 @@ function updateOwnerControls() {
     if (el) el.style.display = visible ? '' : 'none';
   });
 
+  const ownerLoginButton = $('#ownerLoginOpen');
+  if (ownerLoginButton) ownerLoginButton.classList.toggle('hidden', visible);
+
   if (!visible) {
     $('#adminModal')?.classList.add('hidden');
   }
@@ -240,6 +243,21 @@ function openLoginModal(mode = 'login') {
   $('#loginModal').classList.remove('hidden');
 }
 
+function openOwnerLoginModal() {
+  authMode = 'owner';
+  $('#loginTitle').innerHTML = 'Login <span class="green">Owner</span>';
+  $('#loginDescription').textContent = 'Masuk menggunakan email dan kata sandi akun Owner PradaCraft.';
+  $('#authNameWrap').classList.add('hidden');
+  $('#authName').required = false;
+  $('#authPassword').autocomplete = 'current-password';
+  $('#emailAuthSubmit').textContent = 'Masuk sebagai Owner';
+  $('#forgotPassword').classList.remove('hidden');
+  $('#authSwitchText').classList.add('hidden');
+  document.querySelector('.auth-divider')?.classList.add('hidden');
+  document.querySelector('.auth-providers')?.classList.add('hidden');
+  $('#loginModal').classList.remove('hidden');
+}
+
 async function loginProvider(provider) {
   const { error } = await db.auth.signInWithOAuth({
     provider,
@@ -276,17 +294,34 @@ $('#emailAuthForm')?.addEventListener('submit', async e => {
     } else {
       const { data, error } = await db.auth.signInWithPassword({ email, password });
       if (error) throw error;
+      if (authMode === 'owner' && data.user.id !== OWNER_UID) {
+        await db.auth.signOut();
+        currentUser = null;
+        updateAccountUI();
+        updateOwnerControls();
+        toast('Akun ini bukan Owner PradaCraft.');
+        return;
+      }
+
       currentUser = data.user;
       updateAccountUI();
+      updateOwnerControls();
       $('#loginModal').classList.add('hidden');
-      toast('Berhasil login!');
+      if (authMode === 'owner') {
+        $('#adminModal').classList.remove('hidden');
+        await renderAdmin();
+        toast('Berhasil masuk sebagai Owner.');
+      } else {
+        toast('Berhasil login!');
+      }
     }
   } catch (error) {
     console.error(error);
     toast('Login/daftar gagal: ' + error.message);
   } finally {
     button.disabled = false;
-    button.textContent = authMode === 'signup' ? 'Daftar Akun' : 'Login';
+    button.textContent = authMode === 'signup' ? 'Daftar Akun' :
+      authMode === 'owner' ? 'Masuk sebagai Owner' : 'Login';
   }
 });
 
@@ -310,6 +345,7 @@ $('#switchAuthMode')?.addEventListener('click', () => {
 });
 
 $('#loginOpen')?.addEventListener('click', () => openLoginModal('login'));
+$('#ownerLoginOpen')?.addEventListener('click', openOwnerLoginModal);
 $('#accountTrigger')?.addEventListener('click', () => {
   $('#accountDropdown').classList.toggle('hidden');
 });
@@ -1355,8 +1391,12 @@ async function start() {
 
   const params = new URLSearchParams(window.location.search);
 
-  if ((params.get('admin') === 'login' || window.location.pathname.endsWith('/owner.html')) && !isOwner()) {
-    await loginGitHub();
+  if (params.get('admin') === 'login' && !isOwner()) {
+    if (currentUser) {
+      toast('Akun ini bukan Owner PradaCraft. Silakan logout dari akun pengunjung terlebih dahulu.');
+    } else {
+      openOwnerLoginModal();
+    }
   }
 }
 
