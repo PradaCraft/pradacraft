@@ -272,8 +272,8 @@ function openOwnerLoginModal() {
 }
 
 async function loginProvider(provider, ownerMode = false) {
-  if (ownerMode && provider === 'github') {
-    localStorage.setItem('pradacraft_owner_github_login', '1');
+  if (ownerMode) {
+    localStorage.setItem('pradacraft_owner_oauth_login', '1');
   }
 
   const { error } = await db.auth.signInWithOAuth({
@@ -284,7 +284,7 @@ async function loginProvider(provider, ownerMode = false) {
   });
 
   if (error) {
-    if (ownerMode) localStorage.removeItem('pradacraft_owner_github_login');
+    if (ownerMode) localStorage.removeItem('pradacraft_owner_oauth_login');
     toast('Login ' + provider + ' gagal: ' + error.message);
   }
 }
@@ -1493,7 +1493,7 @@ async function start() {
   await refreshUser();
 
   // OAuth GitHub untuk Owner hanya diterima jika kembali sebagai UID Owner yang sah.
-  if (localStorage.getItem('pradacraft_owner_github_login') === '1') {
+  if (localStorage.getItem('pradacraft_owner_oauth_login') === '1') {
     localStorage.removeItem('pradacraft_owner_github_login');
 
     if (isOwner()) {
@@ -1505,7 +1505,7 @@ async function start() {
       currentUser = null;
       updateAccountUI();
       updateOwnerControls();
-      toast('Akun GitHub ini belum terhubung ke akun Owner PradaCraft.');
+      toast('Akun ini belum terhubung ke akun Owner PradaCraft.');
     }
   }
 
