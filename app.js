@@ -945,7 +945,17 @@ async function downloadAddon(a) {
     }
 
     if (/^https?:\/\//i.test(a.file_path)) {
+      const { error: countError } = await db
+        .from('addon_download_events')
+        .insert({ addon_id: a.id, user_id: currentUser.id });
+      if (countError && countError.code !== '23505') {
+        console.error('Download count error:', countError);
+        toast('Download dimulai, tetapi jumlah download gagal dicatat.');
+      } else {
+        toast('Membuka file addon...');
+      }
       window.location.href = a.file_path;
+      await loadAddons();
       return;
     }
 
