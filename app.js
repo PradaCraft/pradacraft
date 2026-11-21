@@ -10,7 +10,7 @@ let addons = [];
 let activeCategory = 'All';
 let selectedRating = 5;
 let currentUser = null;
-let logoutButton = null;
+let authMode = "login";
 
 const $ = s => document.querySelector(s);
 
@@ -149,10 +149,6 @@ function updateOwnerControls() {
     if (el) el.style.display = visible ? '' : 'none';
   });
 
-  if (logoutButton) {
-    logoutButton.style.display = visible ? '' : 'none';
-  }
-
   if (!visible) {
     $('#adminModal')?.classList.add('hidden');
   }
@@ -165,6 +161,7 @@ async function refreshUser() {
 
   currentUser = data?.session?.user || null;
   updateOwnerControls();
+  updateAccountUI();
 
   return currentUser;
 }
@@ -177,8 +174,156 @@ async function loginGitHub() {
     }
   });
 
-  if (error) toast('Login gagal: ' + error.message);
+  if (error) toast('Login Owner gagal: ' + error.message);
 }
+
+function profileName(user = currentUser) {
+  const meta = user?.user_metadata || {};
+  return meta.full_name || meta.name || meta.display_name ||
+    user?.email?.split('@')[0] || 'Pengunjung';
+}
+
+function profileAvatar(user = currentUser) {
+  const meta = user?.user_metadata || {};
+  return meta.avatar_url || meta.picture || meta.photo_url || '';
+}
+
+function avatarMarkup(name, url) {
+  const safeName = esc(name || 'Pengunjung');
+  return url
+    ? `<img class="profile-avatar" src="${esc(url)}" alt="Foto profil" referrerpolicy="no-referrer" onerror="this.style.display='none';this.nextElementSibling.style.display='grid'"><span class="avatar-fallback" style="display:none">${safeName.charAt(0).toUpperCase()}</span>`
+    : `<span class="avatar-fallback">${safeName.charAt(0).toUpperCase()}</span>`;
+}
+
+function updateAccountUI() {
+  const loginButton = $('#loginOpen');
+  const area = $('#accountArea');
+  if (!loginButton || !area) return;
+
+  const loggedIn = Boolean(currentUser);
+  loginButton.classList.toggle('hidden', loggedIn);
+  area.classList.toggle('hidden', !loggedIn);
+
+  if (!loggedIn) {
+    $('#accountDropdown')?.classList.add('hidden');
+    return;
+  }
+
+  const name = profileName();
+  const avatar = profileAvatar();
+  $('#accountAvatar').innerHTML = avatarMarkup(name, avatar);
+  $('#accountName').textContent = name;
+  $('#accountFullName').textContent = name;
+  $('#accountEmail').textContent = currentUser.email || '';
+}
+
+function openLoginModal(mode = 'login') {
+  authMode = mode;
+  const signup = mode === 'signup';
+  $('#loginTitle').innerHTML = signup
+    ? 'Buat <span class="green">Akun</span>'
+    : 'Login <span class="green">Pengunjung</span>';
+  $('#loginDescription').textContent = signup
+    ? 'Daftar akun PradaCraft untuk memakai nama dan foto profil saat berkomentar.'
+    : 'Masuk untuk memberi rating dan komentar dengan profilmu.';
+  $('#authNameWrap').classList.toggle('hidden', !signup);
+  $('#authName').required = signup;
+  $('#authPassword').autocomplete = signup ? 'new-password' : 'current-password';
+  $('#emailAuthSubmit').textContent = signup ? 'Daftar Akun' : 'Login';
+  $('#forgotPassword').classList.toggle('hidden', signup);
+  $('#authSwitchText').innerHTML = signup
+    ? 'Sudah punya akun? <button type="button" id="switchAuthMode">Login</button>'
+    : 'Belum punya akun? <button type="button" id="switchAuthMode">Daftar</button>';
+  $('#loginModal').classList.remove('hidden');
+}
+
+async function loginProvider(provider) {
+  const { error } = await db.auth.signInWithOAuth({
+    provider,
+    options: { redirectTo: window.location.origin + window.location.pathname }
+  });
+  if (error) toast('Login ' + provider + ' gagal: ' + error.message);
+}
+
+$('#emailAuthForm')?.addEventListener('submit', async e => {
+  e.preventDefault();
+  const email = $('#authEmail').value.trim();
+  const password = $('#authPassword').value;
+  const button = $('#emailAuthSubmit');
+  button.disabled = true;
+  button.textContent = authMode === 'signup' ? 'Mendaftarkan...' : 'Memeriksa...';
+
+  try {
+    if (authMode === 'signup') {
+      const displayName = $('#authName').value.trim();
+      const { data, error } = await db.auth.signUp({
+        email,
+        password,
+        options: { data: { display_name: displayName, full_name: displayName } }
+      });
+      if (error) throw error;
+      if (data.session) {
+        currentUser = data.user;
+        updateAccountUI();
+        $('#loginModal').classList.add('hidden');
+        toast('Akun berhasil dibuat dan kamu sudah login.');
+      } else {
+        toast('Pendaftaran berhasil. Periksa email untuk konfirmasi akun.');
+      }
+    } else {
+      const { data, error } = await db.auth.signInWithPassword({ email, password });
+      if (error) throw error;
+      currentUser = data.user;
+      updateAccountUI();
+      $('#loginModal').classList.add('hidden');
+      toast('Berhasil login!');
+    }
+  } catch (error) {
+    console.error(error);
+    toast('Login/daftar gagal: ' + error.message);
+  } finally {
+    button.disabled = false;
+    button.textContent = authMode === 'signup' ? 'Daftar Akun' : 'Login';
+  }
+});
+
+$('#googleLogin')?.addEventListener('click', () => loginProvider('google'));
+$('#facebookLogin')?.addEventListener('click', () => loginProvider('facebook'));
+$('#forgotPassword')?.addEventListener('click', async () => {
+  const email = $('#authEmail').value.trim();
+  if (!email) {
+    toast('Masukkan email terlebih dahulu.');
+    $('#authEmail').focus();
+    return;
+  }
+  const { error } = await db.auth.resetPasswordForEmail(email, {
+    redirectTo: window.location.origin + window.location.pathname
+  });
+  toast(error ? 'Gagal mengirim email reset: ' + error.message : 'Link reset kata sandi dikirim jika email terdaftar.');
+});
+
+$('#switchAuthMode')?.addEventListener('click', () => {
+  openLoginModal(authMode === 'login' ? 'signup' : 'login');
+});
+
+$('#loginOpen')?.addEventListener('click', () => openLoginModal('login'));
+$('#accountTrigger')?.addEventListener('click', () => {
+  $('#accountDropdown').classList.toggle('hidden');
+});
+$('#accountLogout')?.addEventListener('click', async () => {
+  const { error } = await db.auth.signOut();
+  if (error) {
+    toast('Logout gagal: ' + error.message);
+    return;
+  }
+  currentUser = null;
+  updateAccountUI();
+  updateOwnerControls();
+  toast('Berhasil logout.');
+});
+document.addEventListener('click', e => {
+  if (!e.target.closest('#accountArea')) $('#accountDropdown')?.classList.add('hidden');
+});
 
 async function showAdmin() {
   await refreshUser();
@@ -206,6 +351,13 @@ function imageUrl(path) {
   if (!path) return '';
 
   return db.storage.from(BUCKET).getPublicUrl(path).data.publicUrl;
+}
+
+function reviewIdentity(review) {
+  const owner = review.user_id === OWNER_UID;
+  const name = review.name || 'Pengunjung';
+  const avatar = review.avatar_url || '';
+  return `<div class="review-author">${avatarMarkup(name, avatar)}<span>${esc(name)}</span>${owner ? '<span class="verified-badge" title="Owner terverifikasi">✓</span>' : ''}</div>`;
 }
 
 async function loadAddons() {
@@ -374,10 +526,10 @@ async function openDetail(id) {
       <div id="comments">
         ${comments.map((c, i) => `
           <div class="comment">
-            <b>${esc(c.name)}</b> · ${'★'.repeat(c.rating)}
+            <div class="comment-heading">${reviewIdentity(c)}<span class="rating">${'★'.repeat(Number(c.rating || 0))}</span></div>
 
             <p data-translation-id="comment-${i}"
-              data-original="${esc(c.comment)}">${esc(c.comment)}</p>
+              data-original="${esc(c.comment || '')}">${esc(c.comment || '')}</p>
 
             <button class="translate-btn"
               data-translate="comment-${i}">
@@ -545,9 +697,17 @@ async function submitReview(id) {
     return;
   }
 
+  if (!currentUser) {
+    toast('Login terlebih dahulu agar nama dan foto profil tampil di komentar.');
+    openLoginModal('login');
+    return;
+  }
+
   const { error } = await db.from('reviews').insert({
     addon_id: id,
-    name: 'Pengunjung',
+    user_id: currentUser.id,
+    name: profileName(),
+    avatar_url: profileAvatar(),
     rating: selectedRating,
     comment
   });
@@ -745,8 +905,7 @@ $('#adminList').querySelectorAll('[data-delete]').forEach(button => {
   $('#adminReviewList').innerHTML = comments.map(r => `
     <div class="admin-review">
       <div>
-        <b>${esc(r.name || 'Pengunjung')}</b>
-        <span class="rating">${'★'.repeat(Number(r.rating || 0))}</span>
+        <div class="comment-heading">${reviewIdentity(r)}<span class="rating">${'★'.repeat(Number(r.rating || 0))}</span></div>
         <small>${esc(addonNames[r.addon_id] || 'Addon tidak ditemukan')}</small>
         <p>${esc(r.comment || '')}</p>
       </div>
@@ -980,6 +1139,10 @@ $('#menuBtn').onclick = () => {
   $('#nav').classList.toggle('open');
 };
 
+$('#nav')?.querySelectorAll('a').forEach(link => {
+  link.addEventListener('click', () => $('#nav').classList.remove('open'));
+});
+
  // ========================================
  // EVENT WEBSITE
  // ========================================
@@ -1126,44 +1289,13 @@ $('#addonForm').addEventListener('submit', async e => {
 });
 
 // ======================================
-// LOGOUT OWNER
-// ======================================
-
-logoutButton = document.createElement('button');
-logoutButton.className = 'btn ghost full';
-logoutButton.textContent = 'Logout GitHub';
-logoutButton.style.display = 'none';
-
-logoutButton.onclick = async () => {
-  await db.auth.signOut();
-
-  currentUser = null;
-  updateOwnerControls();
-
-  toast('Berhasil logout.');
-};
-
-$('#addonForm').before(logoutButton);
-
-// ======================================
 // STATUS LOGIN
 // ======================================
 
 db.auth.onAuthStateChange((event, session) => {
   currentUser = session?.user || null;
-
   updateOwnerControls();
-
-  if (event === 'SIGNED_IN' && currentUser && !isOwner()) {
-    currentUser = null;
-    updateOwnerControls();
-
-    db.auth.signOut().then(() => {
-      toast('Akun ini tidak memiliki akses Admin PradaCraft.');
-    });
-
-    return;
-  }
+  updateAccountUI();
 
   if (event === 'SIGNED_IN' && isOwner()) {
     $('#adminModal').classList.remove('hidden');
