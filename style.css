@@ -2083,3 +2083,31 @@ body.drawer-open .drawer-backdrop{opacity:1;visibility:visible}body.drawer-open 
 .text-link{color:var(--green);font-size:13px;font-weight:800;text-decoration:none}.latest-section{padding-top:18px}
 @media(max-width:900px){.hero-refresh{margin:20px 18px;padding:30px;min-height:unset}.quick-categories{grid-template-columns:repeat(3,minmax(0,1fr))}}
 @media(max-width:650px){.hero-refresh{display:block;margin:14px 12px 18px;padding:25px 19px;border-radius:20px}.hero-refresh h1{font-size:39px}.hero-refresh .hero-art{min-height:220px;margin-top:28px}.hero-refresh .pixel-cube{transform:scale(.78)}.hero-search{gap:8px;padding-left:12px}.hero-search input{font-size:13px}.hero-search a{padding:9px 13px}.quick-categories{padding:0 12px;grid-template-columns:repeat(2,minmax(0,1fr));gap:9px}.quick-categories a{padding:12px;grid-template-columns:36px 1fr;column-gap:8px}.quick-categories a>span{width:36px;height:36px;font-size:18px}.sort-wrap{margin-top:18px;justify-content:space-between}.sort-wrap select{flex:1;min-width:0;max-width:220px}.catalog-section{padding-top:44px}}
+
+
+/* CATALOG DISCOVERY TOOLS */
+.catalog-tools {
+  display:flex; align-items:center; justify-content:space-between; gap:16px;
+  margin:-7px 0 24px; padding:14px 16px;
+  border:1px solid rgba(163,255,75,.16); border-radius:14px;
+  background:linear-gradient(110deg,rgba(163,255,75,.07),rgba(16,22,18,.88));
+}
+.result-count { margin:0; color:#d5e2d2; font-size:13px; font-weight:700; }
+.catalog-tool-controls { display:flex; align-items:center; flex-wrap:wrap; gap:10px; }
+.version-filter { display:flex; align-items:center; gap:9px; color:var(--muted); font-size:12px; font-weight:700; }
+.version-filter select {
+  min-width:145px; padding:9px 30px 9px 11px; border:1px solid #354b37;
+  border-radius:9px; outline:none; background:#101811; color:#f3f7f1;
+}
+.version-filter select:focus { border-color:var(--green); }
+.clear-filters {
+  padding:9px 12px; border:1px solid #3b4a3c; border-radius:9px;
+  background:#151e17; color:#cbd7c9; font-size:12px; font-weight:700; cursor:pointer;
+}
+.clear-filters:hover { border-color:var(--green); color:var(--green); }
+@media(max-width:650px) {
+  .catalog-tools { align-items:stretch; flex-direction:column; gap:12px; padding:13px; }
+  .catalog-tool-controls { align-items:stretch; flex-direction:column; }
+  .version-filter { align-items:stretch; flex-direction:column; gap:6px; }
+  .version-filter select,.clear-filters { width:100%; min-height:42px; }
+}
