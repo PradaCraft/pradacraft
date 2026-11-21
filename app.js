@@ -923,46 +923,15 @@ async function downloadAddon(a) {
   try {
     const curseforgeMatch = String(a.file_path || '').match(/^curseforge:\/\/(\d+)\/(\d+)$/);
     if (curseforgeMatch) {
-      toast('Mengunduh file addon asli...');
-      const { data: sessionData, error: sessionError } = await db.auth.getSession();
-      if (sessionError || !sessionData?.session?.access_token) {
-        throw new Error('Sesi login berakhir. Silakan login kembali.');
-      }
-
-      const response = await fetch(`${SUPABASE_URL}/functions/v1/curseforge-download`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'apikey': SUPABASE_KEY,
-          'Authorization': `Bearer ${sessionData.session.access_token}`
-        },
-        body: JSON.stringify({
-          modId: Number(curseforgeMatch[1]),
-          fileId: Number(curseforgeMatch[2])
-        })
-      });
-
-      if (!response.ok) {
-        let message = 'File gagal diunduh.';
-        try {
-          const detail = await response.json();
-          if (detail?.error) message = detail.error;
-        } catch (_) {}
-        throw new Error(message);
-      }
-
-      const blob = await response.blob();
-      if (!blob.size) throw new Error('File addon kosong atau tidak tersedia.');
-
-      const objectUrl = URL.createObjectURL(blob);
+      const directUrl = `https://www.curseforge.com/api/v1/mods/${curseforgeMatch[1]}/files/${curseforgeMatch[2]}/download`;
+      toast('Membuka unduhan file asli...');
       const link = document.createElement('a');
-      link.href = objectUrl;
-      link.download = fileName;
+      link.href = directUrl;
+      link.rel = 'noopener noreferrer';
       link.style.display = 'none';
       document.body.appendChild(link);
       link.click();
       link.remove();
-      setTimeout(() => URL.revokeObjectURL(objectUrl), 60000);
 
       const { error: countError } = await db
         .from('addon_download_events')
@@ -970,8 +939,13 @@ async function downloadAddon(a) {
       if (countError && countError.code !== '23505') {
         console.error('Download count error:', countError);
       }
-      toast('Download dimulai: ' + fileName);
+      toast('Permintaan download dikirim ke CurseForge.');
       await loadAddons();
+      return;
+    }
+
+    if (/^https?:\/\//i.test(a.file_path)) {
+      window.location.href = a.file_path;
       return;
     }
 
