@@ -2192,3 +2192,29 @@ body {
   .hero-art { border-radius:20px; }
   .addon-card { background:rgba(15,21,17,.9); }
 }
+
+
+/* SKIN COLLECTION + PREMIUM GLASS FINISH */
+.skin-showcase{max-width:1240px;margin:0 auto;padding:56px 24px 34px;scroll-margin-top:88px}
+.skin-showcase .section-head{align-items:end}
+.skin-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:20px}
+.skin-card{position:relative}
+.skin-card .cover{background:radial-gradient(circle at 50% 38%,rgba(166,255,95,.16),transparent 55%),linear-gradient(145deg,#18231d,#080c0a)}
+.skin-card .cover img{object-fit:contain;padding:14px;background:linear-gradient(135deg,rgba(255,255,255,.035),transparent)}
+.skin-card .category-pill{background:rgba(5,10,7,.76);border:1px solid rgba(255,255,255,.14)}
+.skin-empty{padding:20px;border:1px dashed rgba(255,255,255,.16);border-radius:16px;text-align:center;background:rgba(0,0,0,.2)}
+.quick-categories{grid-template-columns:repeat(6,minmax(0,1fr))}
+.quick-categories a,.filter,.sort-wrap select,.version-filter select,.clear-filters,.hero-search,.addon-card,.skin-showcase .skin-empty,.cta{
+  backdrop-filter:blur(18px);-webkit-backdrop-filter:blur(18px)
+}
+.quick-categories a{background:linear-gradient(145deg,rgba(255,255,255,.075),rgba(0,0,0,.28));border-color:rgba(255,255,255,.11);box-shadow:inset 0 1px rgba(255,255,255,.04),0 12px 28px rgba(0,0,0,.12)}
+.quick-categories a:hover{background:linear-gradient(145deg,rgba(163,255,75,.13),rgba(0,0,0,.35));border-color:rgba(163,255,75,.55)}
+.hero-refresh{background:radial-gradient(ellipse at 78% 22%,rgba(163,255,75,.14),transparent 36%),linear-gradient(135deg,rgba(255,255,255,.065),rgba(0,0,0,.42)),rgba(8,12,10,.68);border-color:rgba(255,255,255,.13);backdrop-filter:blur(22px);-webkit-backdrop-filter:blur(22px)}
+.hero-copy{background:linear-gradient(135deg,rgba(255,255,255,.065),rgba(0,0,0,.28))}
+.topbar{background:rgba(5,8,7,.68);backdrop-filter:blur(22px);-webkit-backdrop-filter:blur(22px)}
+.section-head h2{letter-spacing:-.04em}
+.addon-card{overflow:hidden}
+.addon-card .cover img{transition:transform .45s ease}
+.addon-card:hover .cover img{transform:scale(1.045)}
+@media(max-width:900px){.quick-categories{grid-template-columns:repeat(3,minmax(0,1fr))}.skin-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:650px){.skin-showcase{padding:38px 12px 24px}.skin-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:11px}.skin-card .cover{height:160px}.skin-card .card-body{padding:12px}.skin-card .card-desc{font-size:12px}.quick-categories{grid-template-columns:repeat(2,minmax(0,1fr))}}
