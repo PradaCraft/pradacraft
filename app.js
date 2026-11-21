@@ -320,9 +320,9 @@ function updateAccountUI() {
   loginButton.classList.toggle('hidden', loggedIn);
   area.classList.toggle('hidden', !loggedIn);
   const drawerLoginButton = $('#drawerLogin');
-  if (drawerLoginButton) {
-    drawerLoginButton.classList.toggle('hidden', loggedIn);
-  }
+  if (drawerLoginButton) drawerLoginButton.classList.toggle('hidden', loggedIn);
+  const drawerAccount = $('#drawerAccount');
+  if (drawerAccount) drawerAccount.classList.toggle('hidden', !loggedIn);
 
   if (!loggedIn) {
     $('#accountDropdown')?.classList.add('hidden');
@@ -335,8 +335,6 @@ function updateAccountUI() {
   $('#accountName').textContent = name;
   $('#accountFullName').textContent = name;
   $('#accountEmail').textContent = currentUser.email || '';
-  const drawerAccount = $('#drawerAccount');
-  if (drawerAccount) drawerAccount.classList.toggle('hidden', !loggedIn);
   const drawerAvatar = $('#drawerAccountAvatar');
   if (drawerAvatar) drawerAvatar.innerHTML = avatarMarkup(name, avatar);
   const drawerName = $('#drawerAccountName');
@@ -571,7 +569,7 @@ $('#switchAuthMode')?.addEventListener('click', () => {
 $('#loginOpen')?.addEventListener('click', () => openLoginModal('login'));
 // Login Owner sengaja tidak memiliki tombol publik; gunakan URL khusus ?admin=login.
 $('#accountTrigger')?.addEventListener('click', openAccountModal);
-$('#drawerAccountTrigger')?.addEventListener('click', () => { setDrawer(false); openAccountModal(); });
+$('#drawerAccount')?.addEventListener('click', () => { setDrawer(false); openAccountModal(); });
 $('#profileEditForm')?.addEventListener('submit', async e => { e.preventDefault(); await saveAccountProfile(); });
 $('#profileLogout')?.addEventListener('click', async () => {
   const { error } = await db.auth.signOut();
@@ -1539,7 +1537,9 @@ document.addEventListener('click', function(e) {
       ? 'detailModal'
       : close === 'login'
         ? 'loginModal'
-        : 'adminModal';
+        : close === 'profile'
+          ? 'profileModal'
+          : 'adminModal';
 
     $('#' + modalId)?.classList.add('hidden');
 
