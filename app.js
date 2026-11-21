@@ -682,12 +682,14 @@ async function downloadAddon(a) {
     link.click();
     link.remove();
 
-    // Database membatasi hitungan maksimal satu kali per akun per addon per hari.
-    const { error: countError } = await db.rpc(
-      'increment_addon_download',
-      { addon_id_input: a.id }
-    );
-    if (countError) console.error('Download count error:', countError);
+    // Database membatasi satu hitungan per akun per addon per hari.
+    const { error: countError } = await db
+      .from('addon_download_events')
+      .insert({ addon_id: a.id, user_id: currentUser.id });
+
+    if (countError && countError.code !== '23505') {
+      console.error('Download count error:', countError);
+    }
 
     toast('Download dimulai!');
 
