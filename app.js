@@ -152,6 +152,17 @@ function updateOwnerControls() {
   const ownerLoginButton = $('#ownerLoginOpen');
   if (ownerLoginButton) ownerLoginButton.classList.toggle('hidden', visible);
 
+  // Menu samping mengikuti status akun: Owner yang sudah login melihat Panel Owner,
+  // bukan tombol Login Owner lagi.
+  const drawerOwnerButton = $('#drawerOwnerLogin');
+  if (drawerOwnerButton) {
+    drawerOwnerButton.classList.toggle('hidden', false);
+    drawerOwnerButton.innerHTML = visible
+      ? '<span>⚙</span> Panel Owner'
+      : '<span>⚙</span> Login Owner';
+    drawerOwnerButton.setAttribute('aria-label', visible ? 'Buka Panel Owner' : 'Login Owner');
+  }
+
   if (!visible) {
     $('#adminModal')?.classList.add('hidden');
   }
@@ -199,6 +210,10 @@ function updateAccountUI() {
   const loggedIn = Boolean(currentUser);
   loginButton.classList.toggle('hidden', loggedIn);
   area.classList.toggle('hidden', !loggedIn);
+  const drawerLoginButton = $('#drawerLogin');
+  if (drawerLoginButton) {
+    drawerLoginButton.classList.toggle('hidden', loggedIn);
+  }
 
   if (!loggedIn) {
     $('#accountDropdown')?.classList.add('hidden');
@@ -1312,7 +1327,15 @@ $('#drawerClose')?.addEventListener('click', () => setDrawer(false));
 $('#drawerBackdrop')?.addEventListener('click', () => setDrawer(false));
 $('#sideDrawer')?.querySelectorAll('a[href^="#"]').forEach(link => link.addEventListener('click', () => setDrawer(false)));
 $('#drawerLogin')?.addEventListener('click', () => { setDrawer(false); openLoginModal('login'); });
-$('#drawerOwnerLogin')?.addEventListener('click', () => { setDrawer(false); openOwnerLoginModal(); });
+$('#drawerOwnerLogin')?.addEventListener('click', () => {
+  setDrawer(false);
+  if (isOwner()) {
+    $('#adminModal').classList.remove('hidden');
+    renderAdmin();
+  } else {
+    openOwnerLoginModal();
+  }
+});
 $('#drawerYear') && ($('#drawerYear').textContent = new Date().getFullYear());
 document.addEventListener('keydown', e => { if (e.key === 'Escape') setDrawer(false); });
 
