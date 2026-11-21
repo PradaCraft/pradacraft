@@ -242,6 +242,11 @@ function openLoginModal(mode = 'login') {
   $('#authSwitchText').classList.remove('hidden');
   document.querySelector('.auth-divider')?.classList.remove('hidden');
   document.querySelector('.auth-providers')?.classList.remove('hidden');
+  $('#emailAuthForm')?.classList.remove('hidden');
+  $('#forgotPassword')?.classList.toggle('hidden', signup);
+  $('#googleLogin')?.classList.remove('hidden');
+  $('#facebookLogin')?.classList.remove('hidden');
+  $('#githubLogin')?.classList.add('hidden');
   $('#authSwitchText').innerHTML = signup
     ? 'Sudah punya akun? <button type="button" id="switchAuthMode">Login</button>'
     : 'Belum punya akun? <button type="button" id="switchAuthMode">Daftar</button>';
@@ -259,7 +264,9 @@ function openOwnerLoginModal() {
   $('#authName').value = '';
   $('#emailAuthForm')?.classList.remove('was-validated');
   $('#loginTitle').innerHTML = 'Login <span class="green">Owner</span>';
-  $('#loginDescription').textContent = 'Masuk menggunakan email dan kata sandi akun Owner PradaCraft.';
+  $('#loginDescription').textContent = 'Login Owner khusus menggunakan akun GitHub yang telah diizinkan.';
+  $('#emailAuthForm')?.classList.add('hidden');
+  $('#forgotPassword')?.classList.add('hidden');
   $('#authNameWrap').classList.add('hidden');
   $('#authName').required = false;
   $('#authPassword').autocomplete = 'current-password';
@@ -268,6 +275,9 @@ function openOwnerLoginModal() {
   $('#authSwitchText').classList.add('hidden');
   document.querySelector('.auth-divider')?.classList.add('hidden');
   document.querySelector('.auth-providers')?.classList.remove('hidden');
+  $('#googleLogin')?.classList.add('hidden');
+  $('#facebookLogin')?.classList.add('hidden');
+  $('#githubLogin')?.classList.remove('hidden');
   $('#loginModal').classList.remove('hidden');
 }
 
@@ -348,9 +358,15 @@ $('#emailAuthForm')?.addEventListener('submit', async e => {
   }
 });
 
-$('#googleLogin')?.addEventListener('click', () => loginProvider('google', authMode === 'owner'));
-$('#facebookLogin')?.addEventListener('click', () => loginProvider('facebook', authMode === 'owner'));
-$('#githubLogin')?.addEventListener('click', () => loginProvider('github', authMode === 'owner'));
+$('#googleLogin')?.addEventListener('click', () => {
+  if (authMode !== 'owner') loginProvider('google', false);
+});
+$('#facebookLogin')?.addEventListener('click', () => {
+  if (authMode !== 'owner') loginProvider('facebook', false);
+});
+$('#githubLogin')?.addEventListener('click', () => {
+  if (authMode === 'owner') loginProvider('github', true);
+});
 $('#forgotPassword')?.addEventListener('click', async () => {
   const email = $('#authEmail').value.trim();
   const button = $('#forgotPassword');
