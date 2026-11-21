@@ -690,28 +690,24 @@ function card(a) {
 }
 
 function render() {
-  const q = ($('#search')?.value || '').toLowerCase();
-
-  const list = addons.filter(a =>
+  const q = ($('#search')?.value || '').trim().toLowerCase();
+  const sort = $('#sortBy')?.value || 'newest';
+  let list = addons.filter(a =>
     (activeCategory === 'All' || a.category === activeCategory) &&
-    `${a.name} ${a.description} ${a.category}`.toLowerCase().includes(q)
+    `${a.name} ${a.description} ${a.category} ${a.version || ''}`.toLowerCase().includes(q)
   );
+  list = [...list];
+  if (sort === 'popular') list.sort((a,b) => Number(b.downloads||0)-Number(a.downloads||0));
+  else if (sort === 'rating') list.sort((a,b) => Number(b.rating||0)-Number(a.rating||0));
+  else if (sort === 'name') list.sort((a,b) => String(a.name||'').localeCompare(String(b.name||''),'id'));
+  else list.sort((a,b) => new Date(b.created_at||0)-new Date(a.created_at||0));
 
   $('#catalogGrid').innerHTML = list.map(card).join('');
   $('#empty').classList.toggle('hidden', list.length > 0);
-
-  $('#popularGrid').innerHTML = [...addons]
-    .sort((a, b) => b.downloads - a.downloads)
-    .slice(0, 3)
-    .map(card)
-    .join('');
-
+  $('#popularGrid').innerHTML = [...addons].sort((a,b) => Number(b.downloads||0)-Number(a.downloads||0)).slice(0,3).map(card).join('');
+  $('#latestGrid').innerHTML = [...addons].sort((a,b) => new Date(b.created_at||0)-new Date(a.created_at||0)).slice(0,3).map(card).join('');
   $('#totalAddons').textContent = addons.length;
-
-  $('#totalDownloads').textContent = addons
-    .reduce((sum, a) => sum + Number(a.downloads || 0), 0)
-    .toLocaleString('id-ID');
-
+  $('#totalDownloads').textContent = addons.reduce((sum,a)=>sum+Number(a.downloads||0),0).toLocaleString('id-ID');
   $('#year').textContent = new Date().getFullYear();
 }
 
@@ -1466,17 +1462,22 @@ async function deleteAdminReview(id) {
 // ======================================
 
 $('#search').addEventListener('input', render);
+$('#sortBy')?.addEventListener('change', render);
 
 document.querySelectorAll('.filter').forEach(b => {
   b.onclick = () => {
     activeCategory = b.dataset.cat;
-
-    document.querySelectorAll('.filter').forEach(x =>
-      x.classList.toggle('active', x === b)
-    );
-
+    document.querySelectorAll('.filter').forEach(x => x.classList.toggle('active', x === b));
     render();
   };
+});
+
+document.querySelectorAll('[data-quick-cat]').forEach(link => {
+  link.addEventListener('click', () => {
+    activeCategory = link.dataset.quickCat;
+    document.querySelectorAll('.filter').forEach(x => x.classList.toggle('active', x.dataset.cat === activeCategory));
+    render();
+  });
 });
 
 $('#adminOpen').onclick = showAdmin;
