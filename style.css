@@ -1983,3 +1983,40 @@ body {
     margin-bottom: 23px;
   }
 }
+
+
+/* Social login provider buttons */
+.auth-providers {
+  display: grid;
+  grid-template-columns: repeat(3,minmax(0,1fr));
+  gap: 9px;
+}
+.auth-provider-btn {
+  min-width: 0;
+  min-height: 48px;
+  padding: 10px 9px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 9px;
+  border-color: rgba(167,244,91,.19);
+  background: linear-gradient(145deg,#172219,#101711);
+  font-size: 13px;
+  font-weight: 800;
+}
+.provider-icon {
+  width: 19px;
+  height: 19px;
+  flex: 0 0 19px;
+  display: block;
+}
+.facebook-icon { color: #1877f2; }
+.github-icon { color: #f3f7f1; }
+.auth-provider-btn:hover {
+  border-color: var(--green);
+  background: #1b2a1d;
+}
+@media (max-width: 380px) {
+  .auth-providers { grid-template-columns: 1fr; }
+  .auth-provider-btn { justify-content: flex-start; padding-inline: 18px; }
+}
