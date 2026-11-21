@@ -401,7 +401,7 @@ function card(a) {
 
         <div class="card-foot">
           <span class="rating">
-            ★ ${Number(a.rating || 0).toFixed(1)}
+            ★ ${Number(a.rating || 0).toFixed(1)} (${Number(a.votes || 0)})
           </span>
           <span>
             ↓ ${Number(a.downloads || 0).toLocaleString('id-ID')} downloads
