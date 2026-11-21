@@ -1308,9 +1308,20 @@ document.querySelectorAll('.filter').forEach(b => {
 $('#adminOpen').onclick = showAdmin;
 $('#heroAdmin').onclick = showAdmin;
 
-$('#menuBtn').onclick = () => {
-  $('#nav').classList.toggle('open');
-};
+function setDrawer(open) {
+  document.body.classList.toggle('drawer-open', open);
+  $('#sideDrawer')?.setAttribute('aria-hidden', String(!open));
+  $('#drawerBackdrop')?.setAttribute('aria-hidden', String(!open));
+  $('#menuBtn')?.setAttribute('aria-expanded', String(open));
+}
+$('#menuBtn').onclick = () => setDrawer(!document.body.classList.contains('drawer-open'));
+$('#drawerClose')?.addEventListener('click', () => setDrawer(false));
+$('#drawerBackdrop')?.addEventListener('click', () => setDrawer(false));
+$('#sideDrawer')?.querySelectorAll('a[href^="#"]').forEach(link => link.addEventListener('click', () => setDrawer(false)));
+$('#drawerLogin')?.addEventListener('click', () => { setDrawer(false); openLoginModal('login'); });
+$('#drawerOwnerLogin')?.addEventListener('click', () => { setDrawer(false); openOwnerLoginModal(); });
+$('#drawerYear') && ($('#drawerYear').textContent = new Date().getFullYear());
+document.addEventListener('keydown', e => { if (e.key === 'Escape') setDrawer(false); });
 
 $('#nav')?.querySelectorAll('a').forEach(link => {
   link.addEventListener('click', () => $('#nav').classList.remove('open'));
