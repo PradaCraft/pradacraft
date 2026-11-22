@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800&family=Space+Grotesk:wght@400;500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800&family=Press+Start+2P&family=Space+Grotesk:wght@400;500;600;700&display=swap');
 
 :root {
   color-scheme: dark;
@@ -2243,7 +2243,6 @@ body {
 
 
 /* MINECRAFT-INSPIRED ADDON + CATEGORY SHOWCASES */
-@import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap');
 .addon-card:not(.skin-card) .card-title-row h3{
   font-family:'Press Start 2P','Space Grotesk',sans-serif;
   font-size:clamp(10px,1vw,12px);line-height:1.8;letter-spacing:0;color:#e8f7df;
