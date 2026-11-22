@@ -2218,3 +2218,25 @@ body {
 .addon-card:hover .cover img{transform:scale(1.045)}
 @media(max-width:900px){.quick-categories{grid-template-columns:repeat(3,minmax(0,1fr))}.skin-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
 @media(max-width:650px){.skin-showcase{padding:38px 12px 24px}.skin-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:11px}.skin-card .cover{height:160px}.skin-card .card-body{padding:12px}.skin-card .card-desc{font-size:12px}.quick-categories{grid-template-columns:repeat(2,minmax(0,1fr))}}
+
+
+/* PRADACRAFT 2026 CATALOG FINISH */
+:focus-visible{outline:2px solid var(--green);outline-offset:3px}
+.quick-categories a{min-height:78px}
+.quick-categories a>span{box-shadow:inset 0 1px rgba(255,255,255,.08),0 8px 18px rgba(0,0,0,.18)}
+.addon-card{display:flex;flex-direction:column}
+.addon-card .cover{flex:0 0 205px}
+.addon-card .card-body{display:flex;flex:1;flex-direction:column}
+.addon-card .card-foot{margin-top:auto}
+.card-title-row h3{overflow-wrap:anywhere}
+.cover img{object-position:center}
+.skin-card .cover img{object-fit:contain}
+.hero-search:focus-within{border-color:var(--green);box-shadow:0 0 0 3px rgba(163,255,75,.08)}
+.text-link:hover{text-decoration:underline;text-underline-offset:4px}
+@media(max-width:650px){
+.quick-categories a{min-height:72px}
+.addon-card .cover{flex-basis:195px}
+.card-title-row{align-items:flex-start}
+.version{white-space:normal;text-align:right;max-width:112px}
+}
+@media(prefers-reduced-motion:reduce){.addon-card,.quick-categories a,.cover img{transition:none!important}}
