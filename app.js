@@ -680,6 +680,24 @@ async function loadAddons() {
   render();
 }
 
+function videoMarkup(raw, title = 'Preview Minecraft') {
+  const value = String(raw || '').trim();
+  if (!value) return '';
+  try {
+    const url = new URL(value);
+    const host = url.hostname.replace(/^www\./, '').toLowerCase();
+    let embed = '';
+    if (host === 'youtu.be') embed = 'https://www.youtube-nocookie.com/embed/' + url.pathname.slice(1).split('/')[0];
+    else if (host === 'youtube.com' || host === 'm.youtube.com' || host === 'youtube-nocookie.com') {
+      const id = url.searchParams.get('v') || url.pathname.match(/\/embed\/([^/]+)/)?.[1] || url.pathname.match(/\/shorts\/([^/]+)/)?.[1];
+      if (id) embed = 'https://www.youtube-nocookie.com/embed/' + id;
+    }
+    if (embed) return `<div class="media-preview"><div class="media-label">▶ VIDEO PREVIEW</div><iframe src="${esc(embed)}" title="${esc(title)}" loading="lazy" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen referrerpolicy="strict-origin-when-cross-origin"></iframe></div>`;
+    if (/\.(mp4|webm|ogg)(\?.*)?$/i.test(url.pathname + url.search)) return `<div class="media-preview"><div class="media-label">▶ VIDEO PREVIEW</div><video controls playsinline preload="metadata"><source src="${esc(url.href)}"></video></div>`;
+  } catch (_) { return ''; }
+  return '';
+}
+
 function card(a) {
   const image = a.image_url || '';
   const skin = a.category === 'Skin';
@@ -736,6 +754,19 @@ function render() {
   else if (sort === 'name') list.sort((a,b) => String(a.name||'').localeCompare(String(b.name||''),'id'));
   else list.sort((a,b) => new Date(b.created_at||0)-new Date(a.created_at||0));
 
+  const showcase = $('#categoryShowcase');
+  if (showcase) {
+    if (activeCategory === 'All') {
+      showcase.classList.add('hidden');
+      showcase.innerHTML = '';
+    } else {
+      const categoryItems = addons.filter(a => a.category === activeCategory);
+      const featured = categoryItems.find(a => a.video_url) || categoryItems[0];
+      const categoryNames = {Addon:'ADDON REALMS',Texture:'TEXTURE WORLDS',Map:'MAP EXPLORER',Shader:'VISUAL ENHANCEMENTS',Skin:'PLAYER SKINS',Other:'COMMUNITY PICKS'};
+      showcase.classList.remove('hidden');
+      showcase.innerHTML = `<div class="category-showcase-copy"><span class="pixel-kicker">PRADACRAFT / ${esc(activeCategory.toUpperCase())}</span><h2>${esc(categoryNames[activeCategory] || activeCategory.toUpperCase())}</h2><p>${categoryItems.length} koleksi tersedia. Pilih konten untuk melihat detail, versi, preview, dan sumber unduhannya.</p></div>${featured?.video_url ? videoMarkup(featured.video_url, featured.name) : '<div class="category-preview-placeholder"><span>▣</span><b>DISCOVER THE WORLD</b><small>Preview video akan muncul saat Owner menambahkan video untuk kategori ini.</small></div>'}`;
+    }
+  }
   $('#catalogGrid').innerHTML = list.map(card).join('');
   const skinItems = [...addons]
     .filter(a => a.category === 'Skin' && (!q || `${a.name} ${a.description} ${a.version || ''}`.toLowerCase().includes(q)))
@@ -790,6 +821,7 @@ async function openDetail(id) {
 
     <h2>${esc(a.name)}</h2>
 
+    ${videoMarkup(a.video_url, a.name)}
     <div class="detail-meta">
       <span>◈ ${esc(a.version || 'Bedrock')}</span>
       <span class="rating">
@@ -1343,6 +1375,8 @@ async function editAdminAddon(id) {
 
         <label>Deskripsi Addon</label>
         <textarea name="description" rows="8" required>${esc(a.description || '')}</textarea>
+        <label>Link video preview (YouTube atau MP4, opsional)</label>
+        <input name="video_url" type="url" value="${esc(a.video_url || '')}" placeholder="https://youtu.be/...">
 
         <div class="admin-edit-footer">
           <button type="button" class="admin-cancel">Batal</button>
@@ -1373,7 +1407,8 @@ async function editAdminAddon(id) {
       name: form.get('name').trim(),
       category: form.get('category').trim(),
       version: form.get('version').trim(),
-      description: form.get('description').trim()
+      description: form.get('description').trim(),
+      video_url: form.get('video_url').trim() || null
     };
 
     if (!updates.name || !updates.description) {
@@ -1732,6 +1767,7 @@ $('#addonForm').addEventListener('submit', async e => {
       category: fd.get('category'),
       version: savedVersion,
       description: fd.get('description'),
+      video_url: fd.get('video_url')?.trim() || null,
       file_path: filePath,
       image_path: imagePath,
       file_name: file.name,
