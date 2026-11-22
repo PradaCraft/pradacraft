@@ -993,15 +993,45 @@ async function downloadAddon(a) {
   try {
     const curseforgeMatch = String(a.file_path || '').match(/^curseforge:\/\/(\d+)\/(\d+)$/);
     if (curseforgeMatch) {
-      const directUrl = `https://www.curseforge.com/api/v1/mods/${curseforgeMatch[1]}/files/${curseforgeMatch[2]}/download`;
-      toast('Membuka unduhan file asli...');
+      toast('Menghubungkan ke server download resmi...');
+      const { data: sessionData, error: sessionError } = await db.auth.getSession();
+      if (sessionError) throw sessionError;
+      const accessToken = sessionData?.session?.access_token;
+      if (!accessToken) throw new Error('Sesi login berakhir. Silakan login kembali.');
+
+      const response = await fetch(`${SUPABASE_URL}/functions/v1/curseforge-download`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'apikey': SUPABASE_KEY,
+          'Authorization': `Bearer ${accessToken}`
+        },
+        body: JSON.stringify({
+          modId: Number(curseforgeMatch[1]),
+          fileId: Number(curseforgeMatch[2])
+        })
+      });
+
+      if (!response.ok) {
+        let message = `Server download gagal (${response.status}).`;
+        try {
+          const errorData = await response.json();
+          if (errorData?.error) message = errorData.error;
+        } catch (_) {}
+        throw new Error(message);
+      }
+
+      const fileBlob = await response.blob();
+      if (!fileBlob.size) throw new Error('File yang diterima kosong.');
+      const blobUrl = URL.createObjectURL(fileBlob);
       const link = document.createElement('a');
-      link.href = directUrl;
-      link.rel = 'noopener noreferrer';
+      link.href = blobUrl;
+      link.download = fileName;
       link.style.display = 'none';
       document.body.appendChild(link);
       link.click();
       link.remove();
+      setTimeout(() => URL.revokeObjectURL(blobUrl), 60000);
 
       const { error: countError } = await db
         .from('addon_download_events')
@@ -1009,7 +1039,7 @@ async function downloadAddon(a) {
       if (countError && countError.code !== '23505') {
         console.error('Download count error:', countError);
       }
-      toast('Permintaan download dikirim ke CurseForge.');
+      toast('File asli berhasil disiapkan untuk diunduh.');
       await loadAddons();
       return;
     }
@@ -1021,17 +1051,9 @@ async function downloadAddon(a) {
         directFile = /\.(mcaddon|mcpack|mcworld|zip)$/i.test(fileUrl.pathname);
       } catch (_) {}
 
-      // Jangan membuka halaman artikel (misalnya MCPEDL) seolah-olah itu file unduhan.
       if (!directFile) {
         toast('Link file asli belum tersedia. Owner harus memasukkan link file .mcaddon, .mcpack, .mcworld, atau .zip.');
         return;
-      }
-
-      const { error: countError } = await db
-        .from('addon_download_events')
-        .insert({ addon_id: a.id, user_id: currentUser.id });
-      if (countError && countError.code !== '23505') {
-        console.error('Download count error:', countError);
       }
 
       const link = document.createElement('a');
@@ -1042,62 +1064,51 @@ async function downloadAddon(a) {
       document.body.appendChild(link);
       link.click();
       link.remove();
+
+      const { error: countError } = await db
+        .from('addon_download_events')
+        .insert({ addon_id: a.id, user_id: currentUser.id });
+      if (countError && countError.code !== '23505') {
+        console.error('Download count error:', countError);
+      }
       toast('Mengunduh file asli...');
       await loadAddons();
       return;
     }
 
     toast('Menyiapkan download...');
-
     const { data, error } = await db.storage
       .from(BUCKET)
-      .createSignedUrl(a.file_path, 300, {
-        download: fileName
-      });
+      .createSignedUrl(a.file_path, 300, { download: fileName });
 
     if (error) throw error;
-    if (!data?.signedUrl) {
-      throw new Error('Link download tidak tersedia.');
-    }
+    if (!data?.signedUrl) throw new Error('Link download tidak tersedia.');
 
-    // Cek file terlebih dahulu tanpa mengunduhnya dua kali.
-    const response = await fetch(data.signedUrl, {
-      method: 'HEAD'
-    });
+    const response = await fetch(data.signedUrl, { method: 'HEAD' });
+    if (!response.ok) throw new Error('File gagal diakses dari server.');
 
-    if (!response.ok) {
-      throw new Error('File gagal diakses dari server.');
-    }
-
-    // Mulai proses download.
     const link = document.createElement('a');
     link.href = data.signedUrl;
     link.download = fileName;
     link.style.display = 'none';
-
     document.body.appendChild(link);
     link.click();
     link.remove();
 
-    // Database membatasi satu hitungan per akun per addon per hari.
     const { error: countError } = await db
       .from('addon_download_events')
       .insert({ addon_id: a.id, user_id: currentUser.id });
-
     if (countError && countError.code !== '23505') {
       console.error('Download count error:', countError);
     }
 
     toast('Download dimulai!');
-
     await loadAddons();
-
   } catch (error) {
     console.error('Download error:', error);
     toast('Download gagal: ' + error.message);
   }
 }
-
 // ======================================
 // RATING DAN KOMENTAR
 // ======================================
