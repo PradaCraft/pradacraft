@@ -2240,3 +2240,44 @@ body {
 .version{white-space:normal;text-align:right;max-width:112px}
 }
 @media(prefers-reduced-motion:reduce){.addon-card,.quick-categories a,.cover img{transition:none!important}}
+
+
+/* MINECRAFT-INSPIRED ADDON + CATEGORY SHOWCASES */
+@import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap');
+.addon-card:not(.skin-card) .card-title-row h3{
+  font-family:'Press Start 2P','Space Grotesk',sans-serif;
+  font-size:clamp(10px,1vw,12px);line-height:1.8;letter-spacing:0;color:#e8f7df;
+  text-shadow:2px 2px 0 #203923,0 0 16px rgba(163,255,75,.16)
+}
+.category-showcase{
+  display:grid;grid-template-columns:minmax(0,.85fr) minmax(0,1.15fr);gap:24px;
+  align-items:center;margin:0 0 30px;padding:clamp(20px,4vw,38px);
+  border:1px solid rgba(163,255,75,.2);border-radius:22px;
+  background:radial-gradient(ellipse at 12% 0,rgba(163,255,75,.14),transparent 45%),linear-gradient(135deg,rgba(23,36,25,.94),rgba(7,11,9,.94));
+  box-shadow:0 24px 60px rgba(0,0,0,.24)
+}
+.category-showcase-copy .pixel-kicker,.pixel-kicker{
+  color:var(--green);font:9px/1.8 'Press Start 2P',monospace;letter-spacing:.04em
+}
+.category-showcase-copy h2{
+  margin:15px 0 12px;font:clamp(14px,2vw,20px)/1.8 'Press Start 2P',monospace;
+  color:#f2ffe9;text-shadow:3px 3px 0 #31532b
+}
+.category-showcase-copy p{max-width:470px;color:#b6c6b4;font-size:14px;line-height:1.8}
+.media-preview{position:relative;overflow:hidden;border:1px solid rgba(163,255,75,.24);border-radius:16px;background:#030604;box-shadow:0 14px 36px rgba(0,0,0,.35)}
+.media-preview iframe,.media-preview video{display:block;width:100%;aspect-ratio:16/9;border:0;background:#030604}
+.media-preview video{object-fit:contain}
+.media-label{position:absolute;z-index:2;top:10px;left:10px;padding:6px 9px;border:1px solid rgba(163,255,75,.28);border-radius:7px;background:rgba(4,10,5,.84);color:var(--green);font:8px 'Press Start 2P',monospace;pointer-events:none}
+.category-preview-placeholder{min-height:220px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;border:1px dashed rgba(163,255,75,.28);border-radius:16px;background:linear-gradient(135deg,rgba(163,255,75,.08),rgba(0,0,0,.25));text-align:center;padding:24px}
+.category-preview-placeholder span{font-size:42px;color:var(--green)}
+.category-preview-placeholder b{font:10px 'Press Start 2P',monospace;color:#eaffdf;line-height:1.8}
+.category-preview-placeholder small{max-width:300px;color:var(--muted);font-size:12px}
+#detailContent>.media-preview{margin:18px 0 22px}
+#detailContent>.media-preview .media-label{font-size:8px}
+@media(max-width:760px){
+ .category-showcase{grid-template-columns:1fr;gap:16px;margin-inline:0;padding:19px}
+ .category-showcase-copy h2{font-size:13px}
+ .category-showcase-copy p{font-size:13px}
+ .addon-card:not(.skin-card) .card-title-row h3{font-size:9px;line-height:1.7}
+}
+@media(prefers-reduced-motion:reduce){.category-showcase,.media-preview{scroll-behavior:auto}}
