@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <meta name="theme-color" content="#101510"><meta name="description" content="Jelajahi koleksi Minecraft Bedrock: addon, texture pack, map, shader, dan skin di PradaCraft. Lihat detail dan sumber unduhan."><title>PradaCraft — Bedrock Addons, Texture Packs, Maps & Skins</title>
-<link rel="stylesheet" href="style.css?v=pradacraft-catalog-finish-20261122">
+<link rel="stylesheet" href="style.css?v=pradacraft-video-categories-20261122">
 </head>
 <body>
 <header class="topbar">
@@ -59,6 +59,7 @@
 <section class="section skin-showcase" id="skins"><div class="section-head"><div><div class="eyebrow">PERSONALIZE YOUR CHARACTER</div><h2>Skin <span class="green">Minecraft</span></h2><p class="muted">Temukan skin PNG, lihat modelnya, lalu unduh untuk dipakai di Minecraft Bedrock.</p></div><a class="text-link" href="#catalog" data-quick-cat="Skin">Lihat semua skin →</a></div><div class="skin-grid" id="skinGrid"></div><p class="skin-empty muted hidden" id="skinEmpty">Belum ada skin yang dipublikasikan. Koleksi skin akan muncul di sini.</p></section>
 <section class="ticker"><span>✦ PRADACRAFT</span><span>BEDROCK ADDONS</span><span>✦ DISCOVER • DOWNLOAD • PLAY</span><span>MADE FOR CRAFTERS</span></section>
 <section class="section catalog-section" id="catalog">
+ <div id="categoryShowcase" class="category-showcase hidden"></div>
  <div class="section-head"><div><div class="eyebrow">JELAJAHI KOLEKSI</div><h2>Temukan <span class="green">Favoritmu</span></h2><p class="muted">Gunakan kategori dan urutan untuk menemukan konten lebih cepat.</p></div>
  <label class="sort-wrap"><span>Urutkan</span><select id="sortBy"><option value="newest">Terbaru</option><option value="popular">Paling banyak diunduh</option><option value="rating">Rating tertinggi</option><option value="name">Nama A–Z</option></select></label></div>
  <div class="filters" id="filters"><button class="filter active" data-cat="All">Semua</button><button class="filter" data-cat="Addon">Addons</button><button class="filter" data-cat="Texture">Textures</button><button class="filter" data-cat="Map">Maps</button><button class="filter" data-cat="Shader">Shaders</button><button class="filter" data-cat="Skin">Skin</button><button class="filter" data-cat="Other">Lainnya</button></div>
@@ -138,6 +139,7 @@
  <label>Nama addon<input name="name" required maxlength="60" placeholder="Contoh: Fantasy Furniture"></label>
  <div class="form-row"><label>Kategori<select name="category"><option>Addon</option><option>Texture</option><option>Map</option><option>Shader</option><option>Skin</option><option>Other</option></select></label><label>Versi / Model<input name="version" id="uploadVersion" placeholder="1.21+ atau Model: Classic (Steve)" value="1.21+"></label></div><label id="skinModelWrap" class="hidden">Model skin<select id="skinModel"><option value="Classic (Steve)">Classic (Steve)</option><option value="Slim (Alex)">Slim (Alex)</option></select></label>
  <label>Deskripsi<textarea name="description" required rows="3" placeholder="Jelaskan isi addon..."></textarea></label>
+ <label>Video preview (YouTube / MP4, opsional)<input name="video_url" type="url" placeholder="https://youtu.be/... atau link .mp4"></label>
  <label>Gambar cover<input name="image" type="file" accept="image/*"></label>
  <label id="uploadFileLabel">File addon (.mcaddon / .mcpack / .zip)<input name="file" id="uploadFile" type="file" accept=".mcaddon,.mcpack,.zip,.mcworld,.mctemplate" required></label><p class="upload-hint" id="uploadHint">Untuk skin, pilih kategori Skin lalu unggah file PNG skin Minecraft.</p>
  <button class="btn primary full" type="submit">Publish Addon ↗</button>
@@ -178,5 +180,5 @@
 </div>
 <div class="toast" id="toast"></div>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<script src="app.js?v=pradacraft-drawer-skinfix-20261122"></script>
+<script src="app.js?v=pradacraft-video-categories-20261122"></script>
 </body></html>
