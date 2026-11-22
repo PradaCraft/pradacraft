@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://pradacraft.github.io/pradacraft/sitemap.xml
