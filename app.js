@@ -1015,16 +1015,34 @@ async function downloadAddon(a) {
     }
 
     if (/^https?:\/\//i.test(a.file_path)) {
+      let directFile = false;
+      try {
+        const fileUrl = new URL(a.file_path);
+        directFile = /\.(mcaddon|mcpack|mcworld|zip)$/i.test(fileUrl.pathname);
+      } catch (_) {}
+
+      // Jangan membuka halaman artikel (misalnya MCPEDL) seolah-olah itu file unduhan.
+      if (!directFile) {
+        toast('Link file asli belum tersedia. Owner harus memasukkan link file .mcaddon, .mcpack, .mcworld, atau .zip.');
+        return;
+      }
+
       const { error: countError } = await db
         .from('addon_download_events')
         .insert({ addon_id: a.id, user_id: currentUser.id });
       if (countError && countError.code !== '23505') {
         console.error('Download count error:', countError);
-        toast('Download dimulai, tetapi jumlah download gagal dicatat.');
-      } else {
-        toast('Membuka file addon...');
       }
-      window.location.href = a.file_path;
+
+      const link = document.createElement('a');
+      link.href = a.file_path;
+      link.download = fileName;
+      link.rel = 'noopener noreferrer';
+      link.style.display = 'none';
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      toast('Mengunduh file asli...');
       await loadAddons();
       return;
     }
